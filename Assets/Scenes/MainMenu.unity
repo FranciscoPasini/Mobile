@@ -538,6 +538,7 @@ GameObject:
   - component: {fileID: 340516442}
   - component: {fileID: 340516441}
   - component: {fileID: 340516444}
+  - component: {fileID: 340516445}
   - component: {fileID: 340516440}
   m_Layer: 5
   m_Name: Canvas
@@ -644,6 +645,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuManager
   level: Level
+--- !u!114 &340516445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 340516439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f56be5b34bcdbd4d94db87d1dc04c4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SafeArea
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -911,7 +924,7 @@ GameObject:
   - component: {fileID: 1072326251}
   - component: {fileID: 1072326250}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: Title
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
