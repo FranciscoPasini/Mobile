@@ -7,14 +7,25 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GameObject KnobController;
     [SerializeField] private GameObject KnobBackController;
 
+
+
     [SerializeField] private float joystickRadius = 100f;
     [SerializeField] private float playerSpeed = 5f;
 
+    private Vector2 initialKnobObjectPosition;
+
     private Vector2 joystickInput;
+
+    void Awake()
+    {
+        Inputs.EnhancedTouchSupport.Enable();
+    }
 
     private void OnEnable()
     {
-        Inputs.EnhancedTouchSupport.Enable();
+        Inputs.Touch.onFingerDown += SaveLocation;
+        Inputs.Touch.onFingerUp += DisableKnobBackController;
+        
     }
 
     private void OnDisable()
@@ -22,6 +33,11 @@ public class PlayerController : MonoBehaviour
         Inputs.EnhancedTouchSupport.Disable();
     }
 
+
+    void Start()
+    {
+        KnobBackController.SetActive(false);
+    }
     private void Update()
     {
         DetectTouch();
@@ -73,5 +89,17 @@ public class PlayerController : MonoBehaviour
 
         Player.transform.position +=
             movement * playerSpeed * Time.deltaTime;
+    }
+
+    void SaveLocation(Inputs.Finger finger)
+    {
+        initialKnobObjectPosition = finger.screenPosition;
+        KnobBackController.transform.position = initialKnobObjectPosition;
+        KnobBackController.SetActive(true);
+    }
+
+    void DisableKnobBackController(Inputs.Finger finger)
+    {
+        KnobBackController.SetActive(false);
     }
 }
