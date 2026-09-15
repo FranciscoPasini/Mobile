@@ -311,7 +311,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   Player: {fileID: 0}
-  KnobController: {fileID: 0}
+  KnobController: {fileID: 1268805673}
   KnobBackController: {fileID: 503402499}
   initialPosition: {x: 0, y: 0}
   currentPosition: {x: 0, y: 0}

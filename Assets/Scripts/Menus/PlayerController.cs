@@ -19,6 +19,11 @@ public class PlayerController : MonoBehaviour
         Inputs.EnhancedTouchSupport.Enable();
     }
 
+    private void Update()
+    {
+        DetectTouch();
+    }
+
 
     private void DetectTouch()
     {
