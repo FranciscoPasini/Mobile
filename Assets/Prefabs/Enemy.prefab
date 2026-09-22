@@ -130,7 +130,7 @@ MonoBehaviour:
   target: {fileID: 0}
   chaseSpeed: 2
   stoppingDistance: 1.5
-  detectionRange: 10
+  detectionRange: 15
   agent: {fileID: 7993380647679566521}
 --- !u!54 &3896588848687516412
 Rigidbody:
