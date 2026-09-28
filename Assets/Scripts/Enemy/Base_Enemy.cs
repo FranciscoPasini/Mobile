@@ -1,23 +1,48 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System;
 
-public class Base_Enemy : MonoBehaviour
+public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
 {
+    public event Action<Base_Enemy> Despawned;
+
     [Header("References")]
-    [SerializeField] private Transform target; // usually the player (¿o la base?)
+    [SerializeField] private Transform target; // the town building to attack
+    [SerializeField] private LayerMask attackLayerMask = ~0;
 
     [Header("Movement")]
     [SerializeField] private float chaseSpeed = 3.5f;
     [SerializeField] private float stoppingDistance = 1.5f;
 
     [Header("Detection")]
-    [SerializeField] private float detectionRange = 10f;
+    [SerializeField] private float detectionRange = 100f;
     [SerializeField] private float attackRange = 1f;
+
+    [Header("Health")]
+    [SerializeField] private float maxHealth = 10f;
+    [SerializeField] private float currentHealth = 10f;
+    private bool isDead;
+
+    public bool IsAlive => !isDead && gameObject.activeInHierarchy;
 
     [Header("Combat")]
     [SerializeField] private float damage = 5;
-    [SerializeField] private float timeBetweenAttacks = 1.5f;
-    private float nextAttackTime = 0f;
+    [SerializeField] private float timeToAttack = 1.5f;
+    private float currentTimeToAttack = 0f;
+    private Building_Town townBuilding;
+
+
+
+
+
+
+    [Header("Pathing")]
+    [Tooltip("How often (in seconds) to recalculate the path to the target.")]
+    [SerializeField] private float pathUpdateInterval = 0.2f;
+    [Tooltip("Minimum target movement (meters) required to force a path update before the interval elapses.")]
+    [SerializeField] private float pathUpdateMinTargetDelta = 0.5f;
+    private float nextPathUpdateTime = 0f;
+    private Vector3 lastTargetPosition;
 
     [SerializeField] private NavMeshAgent agent;
 
@@ -28,23 +53,50 @@ public class Base_Enemy : MonoBehaviour
             agent = GetComponent<NavMeshAgent>();
         }
         agent.speed = chaseSpeed;
-        agent.stoppingDistance = stoppingDistance;
+        // Make sure the agent can actually get within attack range before it stops moving.
+        agent.stoppingDistance = Mathf.Min(stoppingDistance, attackRange);
 
-        if (target == null && GameObject.FindGameObjectWithTag("Player") != null)
+        if (target == null)
         {
-            target = GameObject.FindGameObjectWithTag("Player").transform;
+            townBuilding = FindFirstObjectByType<Building_Town>();
+            if (townBuilding != null)
+            {
+                target = townBuilding.transform;
+            }
+            else
+            {
+                Debug.LogError("No Building_Town found in the scene!", this);
+            }
+        }
+        else
+        {
+            // If a target was assigned in the inspector, try to grab its Building_Town up front.
+            townBuilding = target.GetComponent<Building_Town>();
         }
     }
 
     private void Update()
     {
-        if (target == null) return;
+        if (target == null) 
+        {
+            Debug.LogError($"{gameObject.name}: Target is null", this);
+            return;
+        }
 
         float distance = Vector3.Distance(transform.position, target.position);
 
         if (distance <= detectionRange)
         {
-            agent.SetDestination(target.position);
+            //UPDATE PATHING WITH INTERVALS AND NOT ON TICK
+            bool intervalElapsed = Time.time >= nextPathUpdateTime;
+            bool targetMovedEnough = Vector3.Distance(target.position, lastTargetPosition) >= pathUpdateMinTargetDelta;
+
+            if (intervalElapsed || targetMovedEnough)
+            {
+                agent.SetDestination(target.position);
+                lastTargetPosition = target.position;
+                nextPathUpdateTime = Time.time + pathUpdateInterval;
+            }
         }
         else
         {
@@ -53,27 +105,91 @@ public class Base_Enemy : MonoBehaviour
 
         if (distance <= attackRange)
         {
-            Attack();
+            if (currentTimeToAttack <= timeToAttack) 
+            {
+                currentTimeToAttack += Time.deltaTime;
+            }
+            else
+            {
+                Attack();
+                currentTimeToAttack = 0f;
+            }
         }
     }
 
     private void Attack()
     {
-        if (Time.time >= nextAttackTime)
-        {
-            TownManager.Instance.TakeDamage(damage);
-            nextAttackTime = Time.time + timeBetweenAttacks;
+        RaycastHit hit;
+        Vector3 direction = target.position - transform.position;
 
-            Gizmos.color = Color.red;
-            Gizmos.DrawSphere(transform.position, attackRange);
+        if (Physics.Raycast(transform.position, direction, out hit, attackRange, attackLayerMask))
+        {
+            IDamageable damageable = hit.collider.GetComponent<IDamageable>();
+            if (damageable != null)
+            {
+                damageable.TakeDamage(damage);
+            }
+        }
+        else if (townBuilding != null)
+        {
+            // Fallback: raycast can miss (blocked, wrong angle, etc.) but we still know our target.
+            townBuilding.TakeDamage(damage);
         }
     }
 
-    private void OnDrawGizmos()
+    public void Spawn(Vector3 position)
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        gameObject.SetActive(true);
+        transform.position = position;
+        
+        // Ensure the NavMeshAgent is enabled and on the NavMesh
+        agent.enabled = true;
+        agent.Warp(position);
+        
+        currentTimeToAttack = 0f;
+        nextPathUpdateTime = 0f;
+        lastTargetPosition = Vector3.positiveInfinity;
+        Respawn();
+    }
+
+    public void Despawn()
+    {
+        if (agent.enabled && agent.isOnNavMesh) agent.ResetPath();
+        agent.enabled = false;
+        gameObject.SetActive(false);
+        Despawned?.Invoke(this);
+    }
+
+    public void TakeDamage(float damage)
+    {
+        // Several bullets can land in the same frame; ignore hits once we're already dead.
+        if (isDead) return;
+
+        currentHealth -= damage;
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
+
+    public void Heal(float amount)
+    {
+        if (isDead) return;
+        currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
+    }
+
+    public void Die()
+    {
+        if (isDead) return;
+
+        isDead = true;
+        currentHealth = 0f;
+        Despawn();
+    }
+
+    public void Respawn()
+    {
+        isDead = false;
+        currentHealth = maxHealth;
     }
 }

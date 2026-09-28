@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b792a68255b4d934785e45a981b5b953, type: 3}
+  m_Name: Basic_Turret
+  m_EditorClassIdentifier: Assembly-CSharp::Building_Turret_Data
+  levels:
+  - cost: 50
+    bulletDamage: 1
+    bulletSpeed: 20
+    range: 8
+    fireRate: 1
+  infiniteLevels: 0
+  scaling:
+    costGrowth: 1.15
+    damageGrowth: 0.25
+    minFireRate: 0.15
+    fireRateApproach: 0.07
+    maxRange: 16
+    rangeApproach: 0.08
+    maxBulletSpeed: 50
+    bulletSpeedApproach: 0.08

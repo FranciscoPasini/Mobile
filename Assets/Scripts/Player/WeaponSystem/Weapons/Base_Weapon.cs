@@ -11,7 +11,7 @@ public class Base_Weapon_Data : ScriptableObject
     public string weaponName;
     public string weaponDescription;
     public Sprite weaponIcon;
-    public int weaponBaseDamage;
+    public float weaponBaseDamage;
     public float weaponBaseRange;
     public float weaponBaseFireRate;
     public float weaponBaseBulletSpeed;
@@ -38,7 +38,7 @@ public class Base_Weapon
     [SerializeField] private string weaponName;
     [SerializeField] private string weaponDescription;
     [SerializeField] private Sprite weaponIcon;
-    [SerializeField] private int weaponBaseDamage;
+    [SerializeField] private float weaponBaseDamage;
     [SerializeField] private float weaponBaseRange;
     [SerializeField] private float weaponBaseFireRate;
     [SerializeField] private float weaponBaseBulletSpeed;
@@ -129,7 +129,7 @@ public class Base_Weapon
 
     protected void FireBullet()
     {
-        if (bulletData == null || targetObject == null)
+        if (bulletData == null || !HasValidTarget())
         {
             return;
         }
@@ -147,9 +147,18 @@ public class Base_Weapon
     }
 
 
+    /// <summary>
+    /// A pooled enemy is deactivated instead of destroyed, so a null check is not enough
+    /// to tell whether the current target is still worth shooting at.
+    /// </summary>
+    private bool HasValidTarget()
+    {
+        return targetObject != null && targetObject.activeInHierarchy;
+    }
+
     public void AutoFire()
     {
-        if (targetObject == null)
+        if (!HasValidTarget())
         {
             return;
         }

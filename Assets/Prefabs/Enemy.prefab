@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 7993380647679566521}
   m_Layer: 6
   m_Name: Enemy
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -128,9 +128,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Base_Enemy
   target: {fileID: 0}
-  chaseSpeed: 2
+  attackLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  chaseSpeed: 4
   stoppingDistance: 1.5
-  detectionRange: 15
+  detectionRange: 100
+  attackRange: 3
+  maxHealth: 5
+  currentHealth: 5
+  damage: 5
+  timeToAttack: 1.5
+  pathUpdateInterval: 0.2
+  pathUpdateMinTargetDelta: 0.5
   agent: {fileID: 7993380647679566521}
 --- !u!54 &3896588848687516412
 Rigidbody:
@@ -168,7 +178,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 516148393976920516}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 1.3
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50

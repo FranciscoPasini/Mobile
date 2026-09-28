@@ -7,7 +7,7 @@ public class Base_Bullet_Data : ScriptableObject
     public string bulletName;
     public float bulletLifetime = 3f;
 
-    public Base_Bullet Spawn(Vector3 origin, Vector3 targetPosition, GameObject targetObject, float speed, int damage)
+    public Base_Bullet Spawn(Vector3 origin, Vector3 targetPosition, GameObject targetObject, float speed, float damage)
     {
         if (bulletPrefab == null)
         {

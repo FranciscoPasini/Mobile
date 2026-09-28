@@ -5,7 +5,7 @@ public class Base_Bullet : MonoBehaviour
     [SerializeField] protected Base_Bullet_Data bulletData;
 
     protected float speed;
-    protected int damage;
+    protected float damage;
     protected Vector3 targetPosition;
     protected GameObject targetObject;
     protected float lifetime;
@@ -14,7 +14,7 @@ public class Base_Bullet : MonoBehaviour
     public virtual void Initialize(
         Base_Bullet_Data data,
         float bulletSpeed,
-        int bulletDamage,
+        float bulletDamage,
         Vector3 targetPos,
         GameObject target)
     {

@@ -46,13 +46,28 @@ public class TargetCollisionUpdater : MonoBehaviour
 
     void Update()
     {
-        CleanupDestroyedTargets();
+        CleanupInvalidTargets();
         UpdateClosestTarget();
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (!IsEnemy(other))
+        {
+            return;
+        }
+
+        if (!potentialTargets.Contains(other.gameObject))
+        {
+            potentialTargets.Add(other.gameObject);
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        // Pooled enemies can be reactivated inside the sphere without raising OnTriggerEnter,
+        // so re-register anything that is overlapping and valid again.
+        if (!IsEnemy(other) || !IsValidTarget(other.gameObject))
         {
             return;
         }
@@ -92,6 +107,11 @@ public class TargetCollisionUpdater : MonoBehaviour
         for (int i = 0; i < potentialTargets.Count; i++)
         {
             GameObject target = potentialTargets[i];
+            if (!IsValidTarget(target))
+            {
+                continue;
+            }
+
             float distanceSqr = (target.transform.position - origin).sqrMagnitude;
 
             if (distanceSqr < closestDistanceSqr)
@@ -101,34 +121,42 @@ public class TargetCollisionUpdater : MonoBehaviour
             }
         }
 
-        if (currentTarget == closestTarget)
-        {
-            if (currentTarget != null)
-            {
-                playerWeaponSystem.UpdateTarget(currentTarget);
-            }
-
-            return;
-        }
-
+        // Always push the result, including null, so the weapon stops firing once
+        // the current target dies and no replacement is in range.
         currentTarget = closestTarget;
         playerWeaponSystem.UpdateTarget(currentTarget);
     }
 
-    private void CleanupDestroyedTargets()
+    private void CleanupInvalidTargets()
     {
+        // Pooled enemies are deactivated rather than destroyed, so a null check alone
+        // would leave dead enemies in the list and keep the weapon locked onto them.
         for (int i = potentialTargets.Count - 1; i >= 0; i--)
         {
-            if (potentialTargets[i] == null)
+            if (!IsValidTarget(potentialTargets[i]))
             {
                 potentialTargets.RemoveAt(i);
             }
         }
 
-        if (currentTarget == null)
+        if (!IsValidTarget(currentTarget))
         {
             currentTarget = null;
         }
+    }
+
+    private bool IsValidTarget(GameObject target)
+    {
+        if (target == null || !target.activeInHierarchy)
+        {
+            return false;
+        }
+
+        // Enemy component may live on a parent of the collider.
+        Base_Enemy enemy = target.GetComponent<Base_Enemy>()
+            ?? target.GetComponentInParent<Base_Enemy>();
+
+        return enemy == null || enemy.IsAlive;
     }
 
     private bool IsEnemy(Collider other)

@@ -17,10 +17,10 @@ MonoBehaviour:
   weaponName: Pistol
   weaponDescription: 
   weaponIcon: {fileID: 0}
-  weaponBaseDamage: 1
+  weaponBaseDamage: 1.5
   weaponBaseRange: 11
   weaponBaseFireRate: 1
-  weaponBaseBulletSpeed: 7
+  weaponBaseBulletSpeed: 14
   weaponBaseAmmo: 11
   weaponFireSound: {fileID: 0}
   bulletData: {fileID: 11400000, guid: a7c4e2f91b3d4e8a9f0c1d2e3b4a5c6d, type: 2}
