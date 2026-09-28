@@ -210,6 +210,7 @@ GameObject:
   - component: {fileID: 3800111729842311697}
   - component: {fileID: 55421506259321389}
   - component: {fileID: 2902393163727936375}
+  - component: {fileID: 6692894113322421984}
   m_Layer: 0
   m_Name: PurchaseZone
   m_TagString: Untagged
@@ -310,6 +311,22 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &6692894113322421984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5198022118313756188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6079a3938cfb6d64a8db738364707cca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuyZoneVisual
+  turret: {fileID: 499002044426418239}
+  fillColor: {r: 0, g: 1, b: 0, a: 1}
+  fillSpeed: 3
+  completeHoldTime: 0.4
 --- !u!1 &5579597915799416060
 GameObject:
   m_ObjectHideFlags: 0

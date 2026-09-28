@@ -46,11 +46,20 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
 
     [SerializeField] private NavMeshAgent agent;
 
+    [Header("Loot")]
+    [Tooltip("Pool the death coin comes from. Found in the scene if left empty.")]
+    [SerializeField] private CoinPool coinPool;
+
     private void Awake()
     {
         if (agent == null)
         {
             agent = GetComponent<NavMeshAgent>();
+        }
+
+        if (coinPool == null)
+        {
+            coinPool = FindFirstObjectByType<CoinPool>();
         }
         agent.speed = chaseSpeed;
         // Make sure the agent can actually get within attack range before it stops moving.
@@ -122,7 +131,8 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         RaycastHit hit;
         Vector3 direction = target.position - transform.position;
 
-        if (Physics.Raycast(transform.position, direction, out hit, attackRange, attackLayerMask))
+        // Ignore triggers so coins on the ground or the player's range sphere can't absorb the attack.
+        if (Physics.Raycast(transform.position, direction, out hit, attackRange, attackLayerMask, QueryTriggerInteraction.Ignore))
         {
             IDamageable damageable = hit.collider.GetComponent<IDamageable>();
             if (damageable != null)
@@ -184,6 +194,13 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
 
         isDead = true;
         currentHealth = 0f;
+
+        // Only real deaths drop loot. Pool cleanup through Despawn() doesn't.
+        if (coinPool != null)
+        {
+            coinPool.DropCoin(transform.position);
+        }
+
         Despawn();
     }
 

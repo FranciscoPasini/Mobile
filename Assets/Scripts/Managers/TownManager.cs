@@ -7,7 +7,7 @@ public class TownManager : MonoBehaviour
     [SerializeField] private Building_Town townBuilding;
     //WAVES
     [Header("Wave System")]
-    [SerializeField] private int CurrentWave;
+    [SerializeField] public int CurrentWave;
     [Tooltip("Seconds between waves. A new wave spawns even if the previous one is still alive.")]
     [SerializeField] private float nextWaveTime = 40f;
     [SerializeField] private float currentWaveTime = 0f;
@@ -32,6 +32,8 @@ public class TownManager : MonoBehaviour
     public static event System.Action<int> OnCoinsChanged;
 
     private bool gameOver;
+
+    public int Wave => CurrentWave;
 
 
     /// <summary>

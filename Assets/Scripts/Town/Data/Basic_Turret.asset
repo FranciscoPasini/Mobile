@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Building_Turret_Data
   levels:
   - cost: 50
-    bulletDamage: 1
-    bulletSpeed: 20
+    bulletDamage: 2
+    bulletSpeed: 45
     range: 8
-    fireRate: 1
-  infiniteLevels: 0
+    fireRate: 0.7
+  infiniteLevels: 1
   scaling:
     costGrowth: 1.15
     damageGrowth: 0.25
