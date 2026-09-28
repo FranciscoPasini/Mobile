@@ -33,6 +33,7 @@ public class Building_Turret : base_TownBuilding
     [SerializeField] private float turnSpeed = 360f;
     [SerializeField] private LayerMask enemyLayer;
     [SerializeField] private float targetScanInterval = 0.2f;
+    [SerializeField] private AudioClip fireSound;
 
     [Header("Visuals")]
     [SerializeField] private GameObject unbuiltVisual;
@@ -256,6 +257,7 @@ public class Building_Turret : base_TownBuilding
 
         // The bullet only reacts to the collider it was aimed at, so pass that collider's GameObject.
         bulletData.Spawn(firePoint.position, aimPoint, currentTarget.gameObject, bulletSpeed, bulletDamage);
+        if (fireSound != null) AudioSource.PlayClipAtPoint(fireSound, firePoint.position);
     }
 
     private Collider FindClosestTarget()

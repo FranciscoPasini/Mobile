@@ -18,6 +18,9 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
     [SerializeField] private float detectionRange = 100f;
     [SerializeField] private float attackRange = 1f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip attackSound;
+
     [Header("Health")]
     [SerializeField] private float maxHealth = 10f;
     [SerializeField] private float currentHealth = 10f;
@@ -145,6 +148,7 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
             // Fallback: raycast can miss (blocked, wrong angle, etc.) but we still know our target.
             townBuilding.TakeDamage(damage);
         }
+        if (attackSound != null) AudioSource.PlayClipAtPoint(attackSound, transform.position);
     }
 
     public void Spawn(Vector3 position)

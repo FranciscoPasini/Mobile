@@ -19,9 +19,14 @@ public class PauseManager : MonoBehaviour
         isPaused = true;
     }
 
-    public void MainMenu()
+    public void MainMenu(string sceneName)
     {
         Time.timeScale = 1f;
-        UnityEngine.SceneManagement.SceneManager.LoadScene(mainmenu);
+        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+    }
+
+    public void changeTimeScale(float timeScale)
+    {
+        Time.timeScale = timeScale;
     }
 }

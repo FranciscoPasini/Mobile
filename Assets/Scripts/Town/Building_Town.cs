@@ -4,8 +4,8 @@ using System;
 public class Building_Town : base_TownBuilding, IDamageable
 {
 
-    [SerializeField] private int maxHealth;
-    [SerializeField] private int currentHealth;
+    [SerializeField] public int maxHealth;
+    [SerializeField] public int currentHealth;
 
     public Action<float> onDamageTaken;
     public Action onHealed;

@@ -15,6 +15,7 @@ public class PlayerWeaponSystem : MonoBehaviour
     {
         if (defaultWeaponData == null)
         {
+            Debug.LogError("PlayerWeaponSystem: defaultWeaponData is missing, the player cannot shoot.", this);
             return;
         }
 

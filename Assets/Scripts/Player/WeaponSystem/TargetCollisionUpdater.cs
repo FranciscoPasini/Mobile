@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class TargetCollisionUpdater : MonoBehaviour
@@ -7,7 +6,9 @@ public class TargetCollisionUpdater : MonoBehaviour
     [SerializeField] private SphereCollider attackRangeSphere;
     [SerializeField] private LayerMask enemyLayer;
 
-    private readonly List<GameObject> potentialTargets = new List<GameObject>();
+    // Trigger callbacks are not raised between a sleeping dynamic Rigidbody (the player)
+    // and kinematic ones moved by NavMeshAgent (enemies), so targets are found by querying.
+    private readonly Collider[] overlapResults = new Collider[32];
     private GameObject currentTarget;
 
     void Awake()
@@ -37,6 +38,8 @@ public class TargetCollisionUpdater : MonoBehaviour
         {
             playerWeaponSystem.OnActiveWeaponChanged -= UpdateAttackRange;
         }
+
+        currentTarget = null;
     }
 
     void Start()
@@ -46,51 +49,7 @@ public class TargetCollisionUpdater : MonoBehaviour
 
     void Update()
     {
-        CleanupInvalidTargets();
         UpdateClosestTarget();
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!IsEnemy(other))
-        {
-            return;
-        }
-
-        if (!potentialTargets.Contains(other.gameObject))
-        {
-            potentialTargets.Add(other.gameObject);
-        }
-    }
-
-    private void OnTriggerStay(Collider other)
-    {
-        // Pooled enemies can be reactivated inside the sphere without raising OnTriggerEnter,
-        // so re-register anything that is overlapping and valid again.
-        if (!IsEnemy(other) || !IsValidTarget(other.gameObject))
-        {
-            return;
-        }
-
-        if (!potentialTargets.Contains(other.gameObject))
-        {
-            potentialTargets.Add(other.gameObject);
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (!IsEnemy(other))
-        {
-            return;
-        }
-
-        potentialTargets.Remove(other.gameObject);
-
-        if (currentTarget == other.gameObject)
-        {
-            currentTarget = null;
-        }
     }
 
     private void UpdateClosestTarget()
@@ -100,19 +59,22 @@ public class TargetCollisionUpdater : MonoBehaviour
             return;
         }
 
+        GetRangeSphere(out Vector3 center, out float radius);
+        int hitCount = Physics.OverlapSphereNonAlloc(
+            center, radius, overlapResults, enemyLayer, QueryTriggerInteraction.Ignore);
+
         GameObject closestTarget = null;
         float closestDistanceSqr = float.MaxValue;
-        Vector3 origin = transform.position;
 
-        for (int i = 0; i < potentialTargets.Count; i++)
+        for (int i = 0; i < hitCount; i++)
         {
-            GameObject target = potentialTargets[i];
+            GameObject target = overlapResults[i].gameObject;
             if (!IsValidTarget(target))
             {
                 continue;
             }
 
-            float distanceSqr = (target.transform.position - origin).sqrMagnitude;
+            float distanceSqr = (target.transform.position - center).sqrMagnitude;
 
             if (distanceSqr < closestDistanceSqr)
             {
@@ -127,22 +89,27 @@ public class TargetCollisionUpdater : MonoBehaviour
         playerWeaponSystem.UpdateTarget(currentTarget);
     }
 
-    private void CleanupInvalidTargets()
+    private void GetRangeSphere(out Vector3 center, out float radius)
     {
-        // Pooled enemies are deactivated rather than destroyed, so a null check alone
-        // would leave dead enemies in the list and keep the weapon locked onto them.
-        for (int i = potentialTargets.Count - 1; i >= 0; i--)
+        if (attackRangeSphere == null)
         {
-            if (!IsValidTarget(potentialTargets[i]))
-            {
-                potentialTargets.RemoveAt(i);
-            }
+            center = transform.position;
+            radius = GetWeaponRange();
+            return;
         }
 
-        if (!IsValidTarget(currentTarget))
-        {
-            currentTarget = null;
-        }
+        Transform sphereTransform = attackRangeSphere.transform;
+        Vector3 scale = sphereTransform.lossyScale;
+        float maxScale = Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
+
+        center = sphereTransform.TransformPoint(attackRangeSphere.center);
+        radius = attackRangeSphere.radius * maxScale;
+    }
+
+    private float GetWeaponRange()
+    {
+        Base_Weapon activeWeapon = playerWeaponSystem != null ? playerWeaponSystem.GetActiveWeapon() : null;
+        return activeWeapon != null ? activeWeapon.GetWeaponCalculatedBaseRange() : 0f;
     }
 
     private bool IsValidTarget(GameObject target)
@@ -152,31 +119,23 @@ public class TargetCollisionUpdater : MonoBehaviour
             return false;
         }
 
-        // Enemy component may live on a parent of the collider.
-        Base_Enemy enemy = target.GetComponent<Base_Enemy>()
-            ?? target.GetComponentInParent<Base_Enemy>();
-
+        // Pooled enemies are deactivated rather than destroyed, and the Enemy component
+        // may live on a parent of the collider.
+        Base_Enemy enemy = target.GetComponentInParent<Base_Enemy>();
         return enemy == null || enemy.IsAlive;
-    }
-
-    private bool IsEnemy(Collider other)
-    {
-        return ((1 << other.gameObject.layer) & enemyLayer) != 0;
     }
 
     private void UpdateAttackRange()
     {
-        if (attackRangeSphere == null || playerWeaponSystem == null)
+        if (attackRangeSphere == null)
         {
             return;
         }
 
-        Base_Weapon activeWeapon = playerWeaponSystem.GetActiveWeapon();
-        if (activeWeapon == null)
+        float range = GetWeaponRange();
+        if (range > 0f)
         {
-            return;
+            attackRangeSphere.radius = range;
         }
-
-        attackRangeSphere.radius = activeWeapon.GetWeaponCalculatedBaseRange();
     }
 }

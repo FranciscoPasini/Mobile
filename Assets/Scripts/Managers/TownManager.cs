@@ -1,5 +1,7 @@
 using UnityEngine;
 using NaughtyAttributes;
+using System;
+using UnityEngine.XR;
 
 public class TownManager : MonoBehaviour
 {
@@ -20,6 +22,7 @@ public class TownManager : MonoBehaviour
     [SerializeField] private int extraEnemiesPerWave = 1;
     [Tooltip("Ceiling on how many enemies a single wave may request.")]
     [SerializeField] private int maxEnemiesPerWave = 10;
+    [SerializeField] private GameObject gameOverScreen;
 
     //ENEMY POOL
     [Header("Enemy Pool")]
@@ -30,10 +33,14 @@ public class TownManager : MonoBehaviour
     [SerializeField] private int startingCoins = 100;
     public static int Coins;
     public static event System.Action<int> OnCoinsChanged;
+    public event Action OnWaveChanged;
+    public event Action<float> OnTownDamageTaken;
 
     private bool gameOver;
 
     public int Wave => CurrentWave;
+
+
 
 
     /// <summary>
@@ -56,13 +63,13 @@ public class TownManager : MonoBehaviour
         //FIND THE TOWN IF NOT SET
         if (townBuilding == null) 
         {
-            townBuilding = Object.FindFirstObjectByType<Building_Town>();
+            townBuilding = UnityEngine.Object.FindFirstObjectByType<Building_Town>();
         }
 
         //FIND THE POOL IF NOT SET
         if (enemyPool == null)
         {
-            enemyPool = Object.FindFirstObjectByType<EnemyPool>();
+            enemyPool = UnityEngine.Object.FindFirstObjectByType<EnemyPool>();
         }
 
         //SUBSCRIBE TO EVENTS
@@ -102,6 +109,7 @@ public class TownManager : MonoBehaviour
         }
 
         CurrentWave++;
+        OnWaveChanged?.Invoke();
 
         int requested = Mathf.Min(enemiesPerWave + (CurrentWave - 1) * extraEnemiesPerWave, maxEnemiesPerWave);
         int spawned = enemyPool.SpawnMany(requested);
@@ -161,14 +169,35 @@ public class TownManager : MonoBehaviour
     private void OnDamageTaken(float damage) 
     {
         Debug.LogWarning($"Town Manager: Town Building took {damage} damage");
+        OnTownDamageTaken?.Invoke(damage);
+        //Handheld.Vibrate(); //VIBRATE THE DEVICE
     }
 
     private void OnDied() 
     {
         gameOver = true;
-        Debug.Log("Town Manager: Town Building died, game over");
+        Time.timeScale = 0f;
+        gameOverScreen.SetActive(true);
+        ResetCoins();
     }
 
-    
+    public void ResetCoins()
+    {
+        Coins = startingCoins;
+        OnCoinsChanged?.Invoke(Coins);
+    }
 
+    public int GetCoins()
+    {
+        return Coins;
+    }
+
+    public int GetTownHealth()
+    {
+        return townBuilding.currentHealth;
+    }
+    public int GetTownMaxHealth()
+    {
+        return townBuilding.maxHealth;
+    }
 }

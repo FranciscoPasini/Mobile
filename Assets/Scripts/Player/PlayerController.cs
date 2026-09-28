@@ -9,6 +9,10 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private float joystickRadius = 100f;
     [SerializeField] private float playerSpeed = 5f;
+    [Tooltip("Degrees per second the player turns toward the movement direction.")]
+    [SerializeField] private float turnSpeed = 720f;
+    [Tooltip("Joystick input below this doesn't rotate the player, so a resting thumb doesn't jitter the facing.")]
+    [SerializeField] private float rotationDeadZone = 0.1f;
 
     private Vector2 initialKnobObjectPosition;
 
@@ -57,7 +61,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        // Si hay más de 2 toques, desactivar el joystick
+        // Si hay ms de 2 toques, desactivar el joystick
         if (touchCount >= 2)
         {
             joystickInput = Vector2.zero;
@@ -98,11 +102,25 @@ public class PlayerController : MonoBehaviour
 
         Player.transform.position +=
             movement * playerSpeed * Time.deltaTime;
+
+        RotatePlayer(movement);
+    }
+
+    private void RotatePlayer(Vector3 movement)
+    {
+        // Keeps the last facing when the joystick is released.
+        if (movement.sqrMagnitude < rotationDeadZone * rotationDeadZone) return;
+
+        Quaternion targetRotation = Quaternion.LookRotation(movement, Vector3.up);
+        Player.transform.rotation = Quaternion.RotateTowards(
+            Player.transform.rotation,
+            targetRotation,
+            turnSpeed * Time.deltaTime);
     }
 
     void SaveLocation(Inputs.Finger finger)
     {
-        // Si ya hay más de 2 toques, no activamos el knob
+        // Si ya hay ms de 2 toques, no activamos el knob
         if (Inputs.Touch.activeTouches.Count >= 2)
             return;
 
