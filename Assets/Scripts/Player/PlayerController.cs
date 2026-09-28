@@ -7,8 +7,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GameObject KnobController;
     [SerializeField] private GameObject KnobBackController;
 
-
-
     [SerializeField] private float joystickRadius = 100f;
     [SerializeField] private float playerSpeed = 5f;
 
@@ -46,7 +44,9 @@ public class PlayerController : MonoBehaviour
 
     private void DetectTouch()
     {
-        if (Inputs.Touch.activeTouches.Count == 0)
+        int touchCount = Inputs.Touch.activeTouches.Count;
+
+        if (touchCount == 0)
         {
             joystickInput = Vector2.zero;
 
@@ -54,6 +54,15 @@ public class PlayerController : MonoBehaviour
             KnobController.transform.position =
                 KnobBackController.transform.position;
 
+            return;
+        }
+
+        // Si hay más de 2 toques, desactivar el joystick
+        if (touchCount >= 2)
+        {
+            joystickInput = Vector2.zero;
+            KnobController.transform.position = KnobBackController.transform.position;
+            KnobBackController.SetActive(false);
             return;
         }
 
@@ -93,6 +102,10 @@ public class PlayerController : MonoBehaviour
 
     void SaveLocation(Inputs.Finger finger)
     {
+        // Si ya hay más de 2 toques, no activamos el knob
+        if (Inputs.Touch.activeTouches.Count >= 2)
+            return;
+
         initialKnobObjectPosition = finger.screenPosition;
         KnobBackController.transform.position = initialKnobObjectPosition;
         KnobBackController.SetActive(true);
