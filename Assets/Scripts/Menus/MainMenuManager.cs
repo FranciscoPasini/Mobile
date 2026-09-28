@@ -20,4 +20,9 @@ public class MainMenuManager : MonoBehaviour
     {
         settingsPanel.SetActive(true);
     }
+
+    public void CloseSettings()
+    {
+        settingsPanel.SetActive(false);
+    }
 }
