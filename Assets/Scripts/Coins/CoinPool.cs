@@ -44,9 +44,14 @@ public class CoinPool : MonoBehaviour
     [SerializeField] private float dropHeightOffset = 0.3f;
     [Tooltip("Random horizontal spread so coins from nearby kills don't stack.")]
     [SerializeField] private float dropScatter = 0.4f;
-    [Tooltip("When a drop leaves this many coins or fewer available, the oldest coins fly to the player to free up the pool.")]
+    [Tooltip("When a drop leaves this many coins or fewer available, the oldest coins on the ground disappear to free up the pool.")]
     [SerializeField] private int lowPoolThreshold = 1;
-    [SerializeField] private int autoCollectCount = 5;
+    [UnityEngine.Serialization.FormerlySerializedAs("autoCollectCount")]
+    [SerializeField] private int recycleCount = 5;
+
+    [Header("Pickup Range")]
+    [Tooltip("Source of the pickup range upgrades. Found automatically if left empty.")]
+    [SerializeField] private Player_ExperienceAndStats playerStats;
 
     [Header("Coin Weights")]
     [Tooltip("Read for the current wave, so valuable coins get more common as waves go up.")]
@@ -62,6 +67,8 @@ public class CoinPool : MonoBehaviour
     private readonly Queue<Base_Coin> available = new Queue<Base_Coin>();
     // Kept in drop order, so index 0 is always the oldest coin on the map.
     private readonly List<Base_Coin> active = new List<Base_Coin>();
+    // Every coin the pool owns, pooled or not, so upgrades reach coins already on the map.
+    private readonly List<Base_Coin> allCoins = new List<Base_Coin>();
     private Transform player;
 
     public int AvailableCount => available.Count;
@@ -72,6 +79,11 @@ public class CoinPool : MonoBehaviour
         if (townManager == null)
         {
             townManager = FindFirstObjectByType<TownManager>();
+        }
+
+        if (playerStats == null)
+        {
+            playerStats = FindFirstObjectByType<Player_ExperienceAndStats>();
         }
 
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
@@ -97,27 +109,55 @@ public class CoinPool : MonoBehaviour
             coin.SetPlayer(player);
             coin.Despawned += ReturnToPool;
             available.Enqueue(coin);
+            allCoins.Add(coin);
+        }
+
+        ApplyPickupRange();
+    }
+
+    private void OnEnable()
+    {
+        if (playerStats != null)
+        {
+            playerStats.onPlayerStatsUpgraded += ApplyPickupRange;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (playerStats != null)
+        {
+            playerStats.onPlayerStatsUpgraded -= ApplyPickupRange;
+        }
+    }
+
+    private void ApplyPickupRange()
+    {
+        float multiplier = playerStats != null ? playerStats.GetPickupRangeMultiplier() : 1f;
+
+        for (int i = 0; i < allCoins.Count; i++)
+        {
+            allCoins[i].SetPickupRangeMultiplier(multiplier);
         }
     }
 
     /// <summary>
-    /// Drops a coin of a wave-weighted random type. Returns null if the pool was empty,
-    /// in which case the value is awarded straight away so the kill isn't wasted.
+    /// Drops a coin of a wave-weighted random type. Returns null if every coin is still flying
+    /// to the player, in which case nothing drops.
     /// </summary>
     public Base_Coin DropCoin(Vector3 position)
     {
         if (available.Count <= lowPoolThreshold)
         {
-            CollectOldest(autoCollectCount);
+            RecycleOldest(recycleCount);
         }
-
-        CoinType type = RollCoinType(GetWave());
 
         if (available.Count == 0)
         {
-            TownManager.AddCoins((int)type);
             return null;
         }
+
+        CoinType type = RollCoinType(GetWave());
 
         Vector2 scatter = Random.insideUnitCircle * dropScatter;
         Vector3 dropPosition = position + new Vector3(scatter.x, dropHeightOffset, scatter.y);
@@ -151,22 +191,40 @@ public class CoinPool : MonoBehaviour
         return coinWeights[coinWeights.Count - 1].coinType;
     }
 
+    /// <summary>
+    /// Pulls every coin currently on the map to the player, at any distance.
+    /// </summary>
     [Button("Collect All Coins")]
     public void CollectAll()
     {
-        CollectOldest(active.Count);
+        // Copied first: a coin with no player awards and despawns instantly, editing the list.
+        Base_Coin[] snapshot = active.ToArray();
+        foreach (Base_Coin coin in snapshot)
+        {
+            coin.Collect();
+        }
     }
 
-    private void CollectOldest(int count)
+    /// <summary>
+    /// Removes the oldest coins from the map without awarding them.
+    /// </summary>
+    private void RecycleOldest(int count)
     {
-        // Coins already flying still count as active until they land, so skip them.
-        int started = 0;
-        for (int i = 0; i < active.Count && started < count; i++)
+        // Coins flying to the player were earned, so leave them alone.
+        int removed = 0;
+        for (int i = 0; i < active.Count && removed < count;)
         {
-            if (active[i].IsCollecting) continue;
+            if (active[i].IsCollecting)
+            {
+                i++;
+                continue;
+            }
 
-            active[i].Collect();
-            started++;
+            // Despawn removes it from the list, so the next coin slides into index i.
+            Base_Coin coin = active[i];
+            coin.Despawn();
+            if (i < active.Count && active[i] == coin) i++;
+            removed++;
         }
     }
 

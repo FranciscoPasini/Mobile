@@ -24,7 +24,8 @@ public class Base_Bullet_Data : ScriptableObject
         Quaternion rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
         GameObject bulletObject = Object.Instantiate(bulletPrefab, origin, rotation);
 
-        Base_Bullet bullet = bulletObject.GetComponent<Base_Bullet>();
+        Base_Bullet bullet = bulletObject.GetComponent<Base_Bullet>()
+            ?? bulletObject.GetComponentInChildren<Base_Bullet>();
         if (bullet == null)
         {
             Debug.LogError($"{name} prefab '{bulletPrefab.name}' is missing a Base_Bullet component.");

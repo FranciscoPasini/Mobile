@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System;
+using NaughtyAttributes;
 
 public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
 {
@@ -46,12 +47,32 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
     [SerializeField] private float pathUpdateMinTargetDelta = 0.5f;
     private float nextPathUpdateTime = 0f;
     private Vector3 lastTargetPosition;
+    private float stunTimer;
 
     [SerializeField] private NavMeshAgent agent;
 
     [Header("Loot")]
     [Tooltip("Pool the death coin comes from. Found in the scene if left empty.")]
     [SerializeField] private CoinPool coinPool;
+    [Tooltip("Weapons dropped on death. Found in the scene if left empty.")]
+    [SerializeField] private WeaponPickupPool weaponPickupPool;
+    [Tooltip("Experience the player gets for the kill.")]
+    [SerializeField, Min(0)] private int experienceReward = 20;
+    [Tooltip("Receives the kill experience. Found in the scene if left empty.")]
+    [SerializeField] private Player_ExperienceAndStats playerStats;
+
+    [Header("Difficulty Scaling")]
+    [Tooltip("How this prefab's stats grow. A fast enemy and a tank should use different curves.")]
+    [SerializeField] private EnemyScaling scaling = new EnemyScaling();
+
+    private float baseHealth;
+    private float baseDamage;
+    private float baseSpeed;
+    private float baseTimeToAttack;
+    private int baseExperience;
+    private int difficultyLevel;
+
+    public int DifficultyLevel => difficultyLevel;
 
     private void Awake()
     {
@@ -64,6 +85,25 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         {
             coinPool = FindFirstObjectByType<CoinPool>();
         }
+
+        if (weaponPickupPool == null)
+        {
+            weaponPickupPool = FindFirstObjectByType<WeaponPickupPool>();
+        }
+
+        if (playerStats == null)
+        {
+            playerStats = FindFirstObjectByType<Player_ExperienceAndStats>();
+        }
+
+        if (scaling == null) scaling = new EnemyScaling();
+
+        baseHealth = maxHealth;
+        baseDamage = damage;
+        baseSpeed = chaseSpeed;
+        baseTimeToAttack = timeToAttack;
+        baseExperience = experienceReward;
+
         agent.speed = chaseSpeed;
         // Make sure the agent can actually get within attack range before it stops moving.
         agent.stoppingDistance = Mathf.Min(stoppingDistance, attackRange);
@@ -92,6 +132,11 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         if (target == null) 
         {
             Debug.LogError($"{gameObject.name}: Target is null", this);
+            return;
+        }
+
+        if (UpdateStun())
+        {
             return;
         }
 
@@ -153,7 +198,13 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
 
     public void Spawn(Vector3 position)
     {
+        Spawn(position, difficultyLevel);
+    }
+
+    public void Spawn(Vector3 position, int difficulty)
+    {
         gameObject.SetActive(true);
+        ApplyDifficultyLevel(difficulty);
         transform.position = position;
         
         // Ensure the NavMeshAgent is enabled and on the NavMesh
@@ -163,6 +214,7 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         currentTimeToAttack = 0f;
         nextPathUpdateTime = 0f;
         lastTargetPosition = Vector3.positiveInfinity;
+        ClearStun();
         Respawn();
     }
 
@@ -205,6 +257,16 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
             coinPool.DropCoin(transform.position);
         }
 
+        if (weaponPickupPool != null)
+        {
+            weaponPickupPool.TryDrop(transform.position);
+        }
+
+        if (playerStats != null)
+        {
+            playerStats.AddExperience(experienceReward);
+        }
+
         Despawn();
     }
 
@@ -212,5 +274,138 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
     {
         isDead = false;
         currentHealth = maxHealth;
+        ClearStun();
     }
+
+    /// <summary>
+    /// Stops the enemy from walking or attacking for <paramref name="duration"/> seconds.
+    /// Calling again while stunned uses the longer remaining time.
+    /// </summary>
+    public void Stun(float duration)
+    {
+        if (isDead || duration <= 0f || agent == null) return;
+
+        if (stunTimer <= 0f && agent.enabled && agent.isOnNavMesh)
+        {
+            agent.isStopped = true;
+        }
+
+        stunTimer = Mathf.Max(stunTimer, duration);
+    }
+
+    /// <summary>
+    /// Shoves the enemy away from <paramref name="origin"/> on the NavMesh and stuns it.
+    /// </summary>
+    public void Knockback(Vector3 origin, float distance, float stunDuration)
+    {
+        Stun(stunDuration);
+        if (isDead || distance <= 0f || agent == null) return;
+
+        Vector3 dir = transform.position - origin;
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.0001f) dir = -transform.forward;
+        dir.Normalize();
+
+        Vector3 candidate = transform.position + dir * distance;
+        if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, distance + 0.5f, NavMesh.AllAreas))
+        {
+            if (agent.enabled) agent.Warp(hit.position);
+            else transform.position = hit.position;
+        }
+        else if (agent.enabled && agent.isOnNavMesh)
+        {
+            agent.Warp(transform.position + dir * (distance * 0.5f));
+        }
+    }
+
+    private bool UpdateStun()
+    {
+        if (stunTimer <= 0f) return false;
+
+        stunTimer -= Time.deltaTime;
+        if (stunTimer <= 0f)
+        {
+            ClearStun();
+            return false;
+        }
+
+        return true;
+    }
+
+    private void ClearStun()
+    {
+        stunTimer = 0f;
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        {
+            agent.isStopped = false;
+        }
+    }
+
+    #region Difficulty
+
+    /// <summary>
+    /// Recalculates every scaled stat from this prefab's base values and the given difficulty step.
+    /// Safe to call more than once; levels never compound.
+    /// </summary>
+    public void ApplyDifficultyLevel(int level)
+    {
+        difficultyLevel = Mathf.Max(0, level);
+        ApplyHealthScaling(difficultyLevel);
+        ApplyDamageScaling(difficultyLevel);
+        ApplySpeedScaling(difficultyLevel);
+        ApplyAttackRateScaling(difficultyLevel);
+        ApplyExperienceScaling(difficultyLevel);
+    }
+
+    public void ApplyHealthScaling(int level)
+    {
+        maxHealth = scaling.EvaluateHealth(baseHealth, level);
+        if (currentHealth > maxHealth) currentHealth = maxHealth;
+    }
+
+    public void ApplyDamageScaling(int level)
+    {
+        damage = scaling.EvaluateDamage(baseDamage, level);
+    }
+
+    public void ApplySpeedScaling(int level)
+    {
+        chaseSpeed = scaling.EvaluateSpeed(baseSpeed, level);
+        if (agent != null) agent.speed = chaseSpeed;
+    }
+
+    public void ApplyAttackRateScaling(int level)
+    {
+        timeToAttack = scaling.EvaluateAttackRate(baseTimeToAttack, level);
+    }
+
+    public void ApplyExperienceScaling(int level)
+    {
+        experienceReward = Mathf.Max(0, Mathf.RoundToInt(scaling.EvaluateExperience(baseExperience, level)));
+    }
+
+    [NaughtyAttributes.Button("Log Difficulty Preview")]
+    private void LogDifficultyPreview()
+    {
+        var log = new System.Text.StringBuilder($"{name} difficulty:\n");
+        float previewHealth = Application.isPlaying ? baseHealth : maxHealth;
+        float previewDamage = Application.isPlaying ? baseDamage : damage;
+        float previewSpeed = Application.isPlaying ? baseSpeed : chaseSpeed;
+        float previewAttack = Application.isPlaying ? baseTimeToAttack : timeToAttack;
+        float previewXp = Application.isPlaying ? baseExperience : experienceReward;
+
+        for (int level = 0; level <= 20; level++)
+        {
+            float hp = scaling.EvaluateHealth(previewHealth, level);
+            float dmg = scaling.EvaluateDamage(previewDamage, level);
+            float spd = scaling.EvaluateSpeed(previewSpeed, level);
+            float atk = scaling.EvaluateAttackRate(previewAttack, level);
+            int xp = Mathf.RoundToInt(scaling.EvaluateExperience(previewXp, level));
+            log.AppendLine($"Lv {level}: hp {hp:0.#}, dmg {dmg:0.#}, speed {spd:0.##}, every {atk:0.##}s, xp {xp}");
+        }
+
+        Debug.Log(log.ToString(), this);
+    }
+
+    #endregion
 }

@@ -51,4 +51,10 @@ public class Building_Town : base_TownBuilding, IDamageable
         currentHealth = maxHealth;
         onRespawned?.Invoke();
     }
+
+
+    public void SetMaxHealth(int newMaxHealth)
+    {
+        maxHealth = newMaxHealth;
+    }
 }

@@ -35,6 +35,7 @@ public class TownManager : MonoBehaviour
     public static event System.Action<int> OnCoinsChanged;
     public event Action OnWaveChanged;
     public event Action<float> OnTownDamageTaken;
+    public event Action OnTownHealthChanged;
 
     private bool gameOver;
 
@@ -157,11 +158,13 @@ public class TownManager : MonoBehaviour
         {
             townBuilding.onDamageTaken += OnDamageTaken;
             townBuilding.onDied += OnDied;
+            townBuilding.onHealed += OnHealed;
         }
         else
         {
             townBuilding.onDamageTaken -= OnDamageTaken;
             townBuilding.onDied -= OnDied;
+            townBuilding.onHealed -= OnHealed;
         }
     }
 
@@ -170,6 +173,7 @@ public class TownManager : MonoBehaviour
     {
         Debug.LogWarning($"Town Manager: Town Building took {damage} damage");
         OnTownDamageTaken?.Invoke(damage);
+        OnTownHealthChanged?.Invoke();
         //Handheld.Vibrate(); //VIBRATE THE DEVICE
     }
 
@@ -199,5 +203,10 @@ public class TownManager : MonoBehaviour
     public int GetTownMaxHealth()
     {
         return townBuilding.maxHealth;
+    }
+
+    private void OnHealed()
+    {
+        OnTownHealthChanged?.Invoke();
     }
 }

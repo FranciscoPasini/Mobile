@@ -116,6 +116,7 @@ GameObject:
   - component: {fileID: 5200426410094302932}
   - component: {fileID: 1747108768054945326}
   - component: {fileID: 7664581306337797695}
+  - component: {fileID: 2099978691555375353}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -260,6 +261,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWeaponSystem
   defaultWeaponData: {fileID: 11400000, guid: bc43eccab714f1845ab07682ae1a6dc7, type: 2}
   firePoint: {fileID: 2544725057895677459}
+  playerStats: {fileID: 2099978691555375353}
+--- !u!114 &2099978691555375353
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4562131162475996881}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e71a58ec143ca547b52ed2e36925f29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Player_ExperienceAndStats
+  TownBuilding: {fileID: 0}
+  currentPlayerLevel: 0
+  experienceToNextLevel: 0
+  currentPlayerExperience: 0
+  currentTownMaxHealth: 0
+  currentTownHealth: 0
+  weaponStatLevels:
+    damage: 0
+    fireRate: 0
+    bulletSpeed: 0
+    range: 0
+    ammo: 0
 --- !u!1001 &638833335126500316
 PrefabInstance:
   m_ObjectHideFlags: 0

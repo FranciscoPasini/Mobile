@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68b25d488cd14b61880bd88c74599a50, type: 3}
+  m_Name: Shotgun
+  m_EditorClassIdentifier: Assembly-CSharp::Base_Weapon_Data
+  weaponClass:
+    rid: 293540588966379585
+  weaponName: Shotgun
+  weaponDescription: Fires a spread of pellets that stagger enemies.
+  weaponIcon: {fileID: 0}
+  weaponBaseDamage: 1.2
+  weaponBaseRange: 7
+  weaponBaseFireRate: 0.9
+  weaponBaseBulletSpeed: 22
+  weaponBaseAmmo: 8
+  weaponFireSound: {fileID: 0}
+  bulletData: {fileID: 11400000, guid: 7c4e91a2b8d64f1e9c3a5b7d0e2f4a61, type: 2}
+  scaling:
+    damage:
+      method: 1
+      rate: 0.15
+      maxFactor: 0
+    fireRate:
+      method: 5
+      rate: 0.08
+      maxFactor: 3
+    bulletSpeed:
+      method: 5
+      rate: 0.1
+      maxFactor: 2
+    range:
+      method: 5
+      rate: 0.06
+      maxFactor: 1.5
+    ammo:
+      method: 1
+      rate: 0.2
+      maxFactor: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 293540588966379585
+      type: {class: Weapon_Shotgun, ns: , asm: Assembly-CSharp}
+      data:
+        weaponData: {fileID: 0}
+        weaponName: 
+        weaponDescription: 
+        weaponIcon: {fileID: 0}
+        weaponBaseDamage: 0
+        weaponBaseRange: 0
+        weaponBaseFireRate: 0
+        weaponBaseBulletSpeed: 0
+        weaponBaseAmmo: 0
+        weaponCurrentAmmo: 0
+        bulletData: {fileID: 0}
+        isDefaultWeapon: 0
+        pelletCount: 6
+        spreadAngle: 22

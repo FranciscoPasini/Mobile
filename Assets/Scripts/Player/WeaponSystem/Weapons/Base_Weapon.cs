@@ -21,6 +21,14 @@ public class Base_Weapon
     //The default weapon will have infinite Ammo
     [SerializeField] private bool isDefaultWeapon;
 
+    //STATS AFTER APPLYING THE PLAYER'S UPGRADE LEVELS
+    private float weaponDamage;
+    private float weaponRange;
+    private float weaponFireRate;
+    private float weaponBulletSpeed;
+    private int weaponMaxAmmo;
+    private WeaponStatLevels statLevels;
+
     private Vector3 targetPosition;
     private GameObject targetObject;
     private Transform firePoint;
@@ -32,10 +40,11 @@ public class Base_Weapon
 
 
 
-    public void Initialize(Base_Weapon_Data weaponData)
+    public void Initialize(Base_Weapon_Data weaponData, WeaponStatLevels statLevels = default)
     {
         this.weaponData = weaponData;
         ExtractWeaponData();
+        ApplyStatLevels(statLevels);
         ResetAmmo();
     }
 
@@ -70,16 +79,40 @@ public class Base_Weapon
         weaponBaseRange = weaponData.weaponBaseRange;
         weaponBaseFireRate = weaponData.weaponBaseFireRate;
         weaponBaseBulletSpeed = weaponData.weaponBaseBulletSpeed;
+        weaponBaseAmmo = weaponData.weaponBaseAmmo;
         bulletData = weaponData.bulletData;
-        weaponBaseAmmo = GetWeaponCalculatedBaseAmmo();
     }
 
+    /// <summary>
+    /// Recalculates every stat from the base values and the player's upgrade levels.
+    /// Safe to call at any time; a bigger magazine adds the extra rounds without refilling.
+    /// </summary>
+    public void ApplyStatLevels(WeaponStatLevels statLevels)
+    {
+        this.statLevels = statLevels;
+        int previousMaxAmmo = weaponMaxAmmo;
 
+        weaponDamage = CalculateStat(WeaponStat.Damage, weaponBaseDamage);
+        weaponRange = CalculateStat(WeaponStat.Range, weaponBaseRange);
+        weaponFireRate = CalculateStat(WeaponStat.FireRate, weaponBaseFireRate);
+        weaponBulletSpeed = CalculateStat(WeaponStat.BulletSpeed, weaponBaseBulletSpeed);
+        weaponMaxAmmo = Mathf.Max(0, Mathf.RoundToInt(CalculateStat(WeaponStat.Ammo, weaponBaseAmmo)));
+
+        if (previousMaxAmmo > 0)
+        {
+            weaponCurrentAmmo = Mathf.Clamp(weaponCurrentAmmo + weaponMaxAmmo - previousMaxAmmo, 0, weaponMaxAmmo);
+        }
+    }
+
+    private float CalculateStat(WeaponStat stat, float baseValue)
+    {
+        WeaponScaling scaling = weaponData != null ? weaponData.scaling : null;
+        return scaling != null ? scaling.Evaluate(stat, baseValue, statLevels.Get(stat)) : baseValue;
+    }
 
     public int GetWeaponCalculatedBaseAmmo()
     {
-        // Later implement the functionality that extracts the multiplier from player current stats
-        return weaponData != null ? weaponData.weaponBaseAmmo : weaponBaseAmmo;
+        return weaponMaxAmmo;
     }
 
     public void ResetAmmo()
@@ -89,43 +122,82 @@ public class Base_Weapon
 
     public float GetWeaponCalculatedBaseRange()
     {
-        // Later implement the functionality that extracts the multiplier from player current stats
-        return weaponData != null ? weaponData.weaponBaseRange : weaponBaseRange;
+        return weaponRange;
     }
 
     public float GetWeaponCalculatedBulletSpeed()
     {
-        // Later implement the functionality that extracts the multiplier from player current stats
-        return weaponData != null ? weaponData.weaponBaseBulletSpeed : weaponBaseBulletSpeed;
+        return weaponBulletSpeed;
+    }
+
+    public float GetWeaponCalculatedDamage()
+    {
+        return weaponDamage;
+    }
+
+    public float GetWeaponCalculatedFireRate()
+    {
+        return weaponFireRate;
+    }
+
+    public int GetCurrentAmmo()
+    {
+        return weaponCurrentAmmo;
+    }
+
+    protected bool HasValidTarget()
+    {
+        return targetObject != null && targetObject.activeInHierarchy;
+    }
+
+    protected Vector3 GetFireOrigin()
+    {
+        return firePoint != null ? firePoint.position : Vector3.zero;
+    }
+
+    protected Vector3 GetAimDirection()
+    {
+        Vector3 origin = GetFireOrigin();
+        Vector3 toTarget = targetPosition - origin;
+        if (toTarget.sqrMagnitude > 0.0001f) return toTarget.normalized;
+        return firePoint != null ? firePoint.forward : Vector3.forward;
     }
 
     protected void FireBullet()
     {
-        if (bulletData == null || !HasValidTarget())
+        FireBullet(GetFireOrigin(), targetPosition, targetObject, true);
+    }
+
+    protected void FireBulletInDirection(Vector3 direction, bool playSound = false)
+    {
+        Vector3 origin = GetFireOrigin();
+        if (direction.sqrMagnitude <= 0.0001f) direction = Vector3.forward;
+        FireBullet(origin, origin + direction.normalized * 20f, null, playSound);
+    }
+
+    protected void FireBullet(Vector3 origin, Vector3 aimPoint, GameObject target, bool playSound)
+    {
+        if (bulletData == null)
         {
             return;
         }
 
-        Vector3 origin = firePoint != null ? firePoint.position : Vector3.zero;
         bulletData.Spawn(
             origin,
-            targetPosition,
-            targetObject,
+            aimPoint,
+            target,
             GetWeaponCalculatedBulletSpeed(),
-            weaponBaseDamage);
-            if (weaponData.weaponFireSound != null) {
-                AudioSource.PlayClipAtPoint(weaponData.weaponFireSound, origin);
-            }
+            GetWeaponCalculatedDamage());
+
+        if (playSound) PlayFireSound(origin);
     }
 
-
-    /// <summary>
-    /// A pooled enemy is deactivated instead of destroyed, so a null check is not enough
-    /// to tell whether the current target is still worth shooting at.
-    /// </summary>
-    private bool HasValidTarget()
+    protected void PlayFireSound(Vector3 origin)
     {
-        return targetObject != null && targetObject.activeInHierarchy;
+        if (weaponData != null && weaponData.weaponFireSound != null)
+        {
+            AudioSource.PlayClipAtPoint(weaponData.weaponFireSound, origin);
+        }
     }
 
     public void AutoFire()
@@ -142,7 +214,7 @@ public class Base_Weapon
         }
 
         ShootTimer += Time.deltaTime;
-        if (ShootTimer >= weaponBaseFireRate)
+        if (ShootTimer >= weaponFireRate)
         {
             ShootTimer = 0;
             FireEffect();

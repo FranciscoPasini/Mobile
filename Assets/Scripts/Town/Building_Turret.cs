@@ -65,6 +65,7 @@ public class Building_Turret : base_TownBuilding
     public int Level => level;
     public bool IsMaxLevel => turretData == null || !turretData.HasLevel(level);
     public int NextCost => IsMaxLevel ? 0 : nextCost;
+    public int RemainingCost => IsMaxLevel ? 0 : Mathf.Max(0, NextCost - paidTowardNext);
     public float PaymentProgress => NextCost > 0 ? (float)paidTowardNext / NextCost : 0f;
 
     private void Start()
@@ -97,6 +98,11 @@ public class Building_Turret : base_TownBuilding
         if (purchased) ApplyLevelStats();
         RefreshNextCost();
         RefreshVisuals();
+
+        if (purchaseZone != null && purchaseZone.GetComponent<PurchaseCostLabel>() == null)
+        {
+            purchaseZone.gameObject.AddComponent<PurchaseCostLabel>();
+        }
     }
 
     private void Update()

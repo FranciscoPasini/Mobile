@@ -195,6 +195,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   targetScanInterval: 1
+  fireSound: {fileID: 0}
   unbuiltVisual: {fileID: 2652189751010015671}
   builtVisual: {fileID: 9016015496921129723}
   navMeshObstacle: {fileID: 4582101385929183061}
@@ -211,6 +212,7 @@ GameObject:
   - component: {fileID: 55421506259321389}
   - component: {fileID: 2902393163727936375}
   - component: {fileID: 6692894113322421984}
+  - component: {fileID: 6192837465019283746}
   m_Layer: 0
   m_Name: PurchaseZone
   m_TagString: Untagged
@@ -323,10 +325,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6079a3938cfb6d64a8db738364707cca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuyZoneVisual
+  purchaseArea: {fileID: 0}
   turret: {fileID: 499002044426418239}
   fillColor: {r: 0, g: 1, b: 0, a: 1}
   fillSpeed: 3
   completeHoldTime: 0.4
+--- !u!114 &6192837465019283746
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5198022118313756188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4e8a91b7d2f4c6e9a1b3d5f70829416, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PurchaseCostLabel
+  purchaseArea: {fileID: 0}
+  turret: {fileID: 499002044426418239}
+  label: {fileID: 0}
+  worldOffset: {x: 0, y: 1.35, z: 0}
+  fontSize: 4
+  textColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &5579597915799416060
 GameObject:
   m_ObjectHideFlags: 0

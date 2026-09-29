@@ -29,6 +29,7 @@ public class TargetCollisionUpdater : MonoBehaviour
         if (playerWeaponSystem != null)
         {
             playerWeaponSystem.OnActiveWeaponChanged += UpdateAttackRange;
+            playerWeaponSystem.OnWeaponStatsChanged += UpdateAttackRange;
         }
     }
 
@@ -37,6 +38,7 @@ public class TargetCollisionUpdater : MonoBehaviour
         if (playerWeaponSystem != null)
         {
             playerWeaponSystem.OnActiveWeaponChanged -= UpdateAttackRange;
+            playerWeaponSystem.OnWeaponStatsChanged -= UpdateAttackRange;
         }
 
         currentTarget = null;

@@ -3,7 +3,9 @@ using UnityEngine;
 [RequireComponent(typeof(Renderer))]
 public class BuyZoneVisual : MonoBehaviour
 {
-    [Tooltip("Turret whose payment this zone shows. Found in the parents if left empty.")]
+    [Tooltip("Standalone pay zone. Found on this object if left empty.")]
+    [SerializeField] private PurchaseArea purchaseArea;
+    [Tooltip("Turret whose payment this zone shows. Used only when there is no PurchaseArea. Found in the parents if left empty.")]
     [SerializeField] private Building_Turret turret;
     [SerializeField] private Color fillColor = Color.green;
     [Tooltip("How fast the fill catches up to the real payment, in full circles per second.")]
@@ -23,33 +25,55 @@ public class BuyZoneVisual : MonoBehaviour
     private void Awake()
     {
         zoneRenderer = GetComponent<Renderer>();
-        // Instanced copy so every turret's zone fills independently.
+        // Instanced copy so every zone fills independently.
         material = zoneRenderer.material;
         material.SetColor(FillColorId, fillColor);
 
-        if (turret == null)
+        if (purchaseArea == null)
+        {
+            purchaseArea = GetComponent<PurchaseArea>() ?? GetComponentInParent<PurchaseArea>();
+        }
+
+        if (purchaseArea == null && turret == null)
         {
             turret = GetComponentInParent<Building_Turret>();
         }
 
-        if (turret == null)
+        if (purchaseArea == null && turret == null)
         {
-            Debug.LogError($"{name}: BuyZoneVisual has no Building_Turret to follow.", this);
+            Debug.LogError($"{name}: BuyZoneVisual has no PurchaseArea or Building_Turret to follow.", this);
         }
     }
 
     private void OnEnable()
     {
-        if (turret == null) return;
-        turret.OnPurchased += HandleLevelCompleted;
-        turret.OnUpgraded += HandleUpgraded;
+        if (purchaseArea != null)
+        {
+            purchaseArea.OnPurchased += HandleLevelCompleted;
+            purchaseArea.OnUpgraded += HandleUpgraded;
+            return;
+        }
+
+        if (turret != null)
+        {
+            turret.OnPurchased += HandleLevelCompleted;
+            turret.OnUpgraded += HandleUpgraded;
+        }
     }
 
     private void OnDisable()
     {
-        if (turret == null) return;
-        turret.OnPurchased -= HandleLevelCompleted;
-        turret.OnUpgraded -= HandleUpgraded;
+        if (purchaseArea != null)
+        {
+            purchaseArea.OnPurchased -= HandleLevelCompleted;
+            purchaseArea.OnUpgraded -= HandleUpgraded;
+        }
+
+        if (turret != null)
+        {
+            turret.OnPurchased -= HandleLevelCompleted;
+            turret.OnUpgraded -= HandleUpgraded;
+        }
     }
 
     private void OnDestroy()
@@ -62,7 +86,7 @@ public class BuyZoneVisual : MonoBehaviour
 
     private void Update()
     {
-        if (turret == null) return;
+        if (purchaseArea == null && turret == null) return;
 
         if (holdTimer > 0f)
         {
@@ -71,16 +95,25 @@ public class BuyZoneVisual : MonoBehaviour
             return;
         }
 
-        if (turret.IsMaxLevel)
+        if (SourceIsMaxLevel())
         {
             zoneRenderer.enabled = false;
             enabled = false;
             return;
         }
 
-        // The turret's progress resets to 0 on purchase, so this also drains the circle back to empty.
-        displayedFill = Mathf.MoveTowards(displayedFill, turret.PaymentProgress, fillSpeed * Time.deltaTime);
+        displayedFill = Mathf.MoveTowards(displayedFill, SourceProgress(), fillSpeed * Time.deltaTime);
         ApplyFill(displayedFill);
+    }
+
+    private bool SourceIsMaxLevel()
+    {
+        return purchaseArea != null ? purchaseArea.IsMaxLevel : turret.IsMaxLevel;
+    }
+
+    private float SourceProgress()
+    {
+        return purchaseArea != null ? purchaseArea.PaymentProgress : turret.PaymentProgress;
     }
 
     private void HandleUpgraded(int level)

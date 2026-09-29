@@ -52,12 +52,33 @@ public class Base_Bullet : MonoBehaviour
 
     protected virtual void OnTriggerEnter(Collider other)
     {
-        if (targetObject != null && other.gameObject != targetObject)
+        if (ShouldIgnoreCollider(other))
         {
             return;
         }
 
         OnHit(other);
+    }
+
+    protected virtual bool ShouldIgnoreCollider(Collider other)
+    {
+        if (other == null) return true;
+        if (other.CompareTag("Player")) return true;
+        if (targetObject != null && other.gameObject != targetObject) return true;
+        return false;
+    }
+
+    protected bool TryGetEnemy(Collider other, out Base_Enemy enemy)
+    {
+        enemy = other != null ? other.GetComponentInParent<Base_Enemy>() : null;
+        return enemy != null && enemy.IsAlive;
+    }
+
+    protected void DealDamage(Collider other)
+    {
+        IDamageable damageable = other.GetComponent<IDamageable>()
+            ?? other.GetComponentInParent<IDamageable>();
+        damageable?.TakeDamage(damage);
     }
 
     protected virtual void OnHit(Collider other)

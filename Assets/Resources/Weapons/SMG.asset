@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68b25d488cd14b61880bd88c74599a50, type: 3}
+  m_Name: SMG
+  m_EditorClassIdentifier: Assembly-CSharp::Base_Weapon_Data
+  weaponClass:
+    rid: 293540259533160702
+  weaponName: SMG
+  weaponDescription: A fast pistol that burns through ammo.
+  weaponIcon: {fileID: 0}
+  weaponBaseDamage: 1.4
+  weaponBaseRange: 10
+  weaponBaseFireRate: 0.12
+  weaponBaseBulletSpeed: 28
+  weaponBaseAmmo: 30
+  weaponFireSound: {fileID: 0}
+  bulletData: {fileID: 11400000, guid: a7c4e2f91b3d4e8a9f0c1d2e3b4a5c6d, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: 293540259533160702
+      type: {class: Weapon_SMG, ns: , asm: Assembly-CSharp}
+      data:
+        weaponData: {fileID: 0}
+        weaponName: 
+        weaponDescription: 
+        weaponIcon: {fileID: 0}
+        weaponBaseDamage: 0
+        weaponBaseRange: 0
+        weaponBaseFireRate: 0
+        weaponBaseBulletSpeed: 0
+        weaponBaseAmmo: 0
+        weaponCurrentAmmo: 0
+        bulletData: {fileID: 0}
+        isDefaultWeapon: 0

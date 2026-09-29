@@ -49,16 +49,21 @@ public class Base_Coin : MonoBehaviour, IPoolable
     [Tooltip("Force a landing after this long, in case the coin gets stuck on something.")]
     [SerializeField] private float maxDropTime = 3f;
 
-    [Header("Pickup")]
-    [Tooltip("Seconds after spawning before the coin flies to the player by itself.")]
+    [Header("Lifetime")]
+    [Tooltip("Seconds after spawning before an uncollected coin disappears, giving nothing.")]
     [SerializeField] private float lifetime = 10f;
+    [Tooltip("Seconds before disappearing that the coin starts blinking.")]
+    [SerializeField, Min(0f)] private float blinkWarningTime = 5f;
+    [Tooltip("Blinks per second when the warning starts.")]
+    [SerializeField, Min(0.1f)] private float blinkRateStart = 2f;
+    [Tooltip("Blinks per second right before the coin disappears.")]
+    [SerializeField, Min(0.1f)] private float blinkRateEnd = 12f;
 
     [Header("Fly To Player")]
     [SerializeField] private float flyStartSpeed = 4f;
     [SerializeField] private float flyAcceleration = 40f;
     [Tooltip("Aim this far above the player's pivot so coins land on the body, not the feet.")]
     [SerializeField] private float playerHeightOffset = 1f;
-    [SerializeField] private float collectDistance = 0.4f;
     [Tooltip("Safety net: award the coin if it somehow hasn't arrived after this long.")]
     [SerializeField] private float maxFlyTime = 3f;
 
@@ -75,6 +80,11 @@ public class Base_Coin : MonoBehaviour, IPoolable
     private bool hasTouchedGround;
     private float flySpeed;
     private float flyTimer;
+    private float blinkPhase;
+
+    // Magnet size from the prefab, so the pickup range multiplier never compounds.
+    private float baseMagnetRadius;
+    private Vector3 baseMagnetSize;
 
     public CoinType CoinType => coinType;
     public int CoinValue => coinValue;
@@ -108,6 +118,34 @@ public class Base_Coin : MonoBehaviour, IPoolable
         }
 
         if (coinRenderer == null) coinRenderer = GetComponentInChildren<Renderer>();
+
+        CacheMagnetSize();
+    }
+
+    private void CacheMagnetSize()
+    {
+        switch (magnetZone)
+        {
+            case SphereCollider sphere: baseMagnetRadius = sphere.radius; break;
+            case CapsuleCollider capsule: baseMagnetRadius = capsule.radius; break;
+            case BoxCollider box: baseMagnetSize = box.size; break;
+        }
+    }
+
+    /// <summary>
+    /// Scales the magnet zone from its prefab size. 1 = original pickup range.
+    /// </summary>
+    public void SetPickupRangeMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0f, multiplier);
+
+        switch (magnetZone)
+        {
+            case SphereCollider sphere: sphere.radius = baseMagnetRadius * multiplier; break;
+            case CapsuleCollider capsule: capsule.radius = baseMagnetRadius * multiplier; break;
+            // Height is left alone, only the ground footprint matters for pickup.
+            case BoxCollider box: box.size = new Vector3(baseMagnetSize.x * multiplier, baseMagnetSize.y, baseMagnetSize.z * multiplier); break;
+        }
     }
 
     public void SetPlayer(Transform playerTransform)
@@ -123,6 +161,8 @@ public class Base_Coin : MonoBehaviour, IPoolable
         hasTouchedGround = false;
         flySpeed = 0f;
         flyTimer = 0f;
+        blinkPhase = 0f;
+        SetVisible(true);
         state = CoinState.Dropping;
 
         // Velocity only sticks on an active, non-kinematic body.
@@ -146,7 +186,8 @@ public class Base_Coin : MonoBehaviour, IPoolable
     }
 
     /// <summary>
-    /// Sends the coin flying to the player from wherever it is, even mid-drop. Safe to call more than once.
+    /// Sends the coin flying to the player from any distance, even mid-drop. Safe to call more than once.
+    /// Used by the magnet zone and by collect-all effects.
     /// </summary>
     public void Collect()
     {
@@ -159,6 +200,7 @@ public class Base_Coin : MonoBehaviour, IPoolable
         }
 
         FreezeBody();
+        SetVisible(true);
         state = CoinState.Collecting;
         flySpeed = flyStartSpeed;
         flyTimer = 0f;
@@ -201,7 +243,36 @@ public class Base_Coin : MonoBehaviour, IPoolable
         lifeTimer += Time.deltaTime;
         if (lifeTimer >= lifetime)
         {
-            Collect();
+            Despawn();
+            return;
+        }
+
+        UpdateBlink();
+    }
+
+    private void UpdateBlink()
+    {
+        float timeLeft = lifetime - lifeTimer;
+        if (timeLeft > blinkWarningTime || blinkWarningTime <= 0f)
+        {
+            SetVisible(true);
+            return;
+        }
+
+        // 0 when the warning starts, 1 when the coin is about to vanish.
+        float urgency = 1f - timeLeft / blinkWarningTime;
+        float blinkRate = Mathf.Lerp(blinkRateStart, blinkRateEnd, urgency);
+
+        // Accumulating the phase keeps the blink smooth while the rate speeds up.
+        blinkPhase += blinkRate * Time.deltaTime;
+        SetVisible(blinkPhase % 1f < 0.5f);
+    }
+
+    private void SetVisible(bool visible)
+    {
+        if (coinRenderer != null && coinRenderer.enabled != visible)
+        {
+            coinRenderer.enabled = visible;
         }
     }
 
@@ -237,7 +308,8 @@ public class Base_Coin : MonoBehaviour, IPoolable
         Vector3 target = player.position + Vector3.up * playerHeightOffset;
         transform.position = Vector3.MoveTowards(transform.position, target, flySpeed * Time.deltaTime);
 
-        if ((transform.position - target).sqrMagnitude <= collectDistance * collectDistance || flyTimer >= maxFlyTime)
+        // MoveTowards lands exactly on the target, so no arrival distance is needed.
+        if (transform.position == target || flyTimer >= maxFlyTime)
         {
             Award();
         }

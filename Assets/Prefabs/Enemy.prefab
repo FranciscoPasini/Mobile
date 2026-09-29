@@ -145,6 +145,30 @@ MonoBehaviour:
   pathUpdateMinTargetDelta: 0.5
   agent: {fileID: 7993380647679566521}
   coinPool: {fileID: 0}
+  weaponPickupPool: {fileID: 0}
+  experienceReward: 20
+  playerStats: {fileID: 0}
+  scaling:
+    health:
+      method: 1
+      rate: 0.2
+      maxFactor: 0
+    damage:
+      method: 1
+      rate: 0.25
+      maxFactor: 0
+    speed:
+      method: 5
+      rate: 0.08
+      maxFactor: 1.8
+    attackRate:
+      method: 5
+      rate: 0.08
+      maxFactor: 2
+    experience:
+      method: 1
+      rate: 0.15
+      maxFactor: 0
 --- !u!54 &3896588848687516412
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -208,7 +232,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b5fa609431bf13a4488a7d04c3895a60, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.505
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b5fa609431bf13a4488a7d04c3895a60, type: 3}
       propertyPath: m_LocalPosition.z
