@@ -188,23 +188,26 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
 
     private void Attack()
     {
-        RaycastHit hit;
-        Vector3 direction = target.position - transform.position;
-
-        // Ignore triggers so coins on the ground or the player's range sphere can't absorb the attack.
-        if (Physics.Raycast(transform.position, direction, out hit, attackRange, attackLayerMask, QueryTriggerInteraction.Ignore))
+        if (townBuilding != null)
         {
-            IDamageable damageable = hit.collider.GetComponent<IDamageable>();
-            if (damageable != null)
-            {
-                damageable.TakeDamage(damage);
-            }
-        }
-        else if (townBuilding != null)
-        {
-            // Fallback: raycast can miss (blocked, wrong angle, etc.) but we still know our target.
             townBuilding.TakeDamage(damage);
         }
+        else
+        {
+            RaycastHit hit;
+            Vector3 direction = target.position - transform.position;
+
+            // Ignore triggers so coins on the ground or the player's range sphere can't absorb the attack.
+            if (Physics.Raycast(transform.position, direction, out hit, attackRange, attackLayerMask, QueryTriggerInteraction.Ignore))
+            {
+                IDamageable damageable = hit.collider.GetComponent<IDamageable>();
+                if (damageable != null)
+                {
+                    damageable.TakeDamage(damage);
+                }
+            }
+        }
+
         if (attackSound != null) AudioSource.PlayClipAtPoint(attackSound, transform.position);
     }
 

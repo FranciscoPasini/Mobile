@@ -12,21 +12,33 @@ public class Building_Town : base_TownBuilding, IDamageable
     public Action onDied;
     public Action onRespawned;
 
+    private float leftoverDamage;
+
 
     private void Start()
     {
         currentHealth = maxHealth;
+        leftoverDamage = 0f;
     }
 
 
     public void TakeDamage(float damage)
     {
-        currentHealth -= (int)damage;
-        if (currentHealth <= 0)
-        {
-            Die();
+        if (damage <= 0f || currentHealth <= 0) return;
 
+        leftoverDamage += damage;
+        int applied = Mathf.FloorToInt(leftoverDamage);
+        if (applied > 0)
+        {
+            leftoverDamage -= applied;
+            currentHealth -= applied;
+            if (currentHealth <= 0)
+            {
+                leftoverDamage = 0f;
+                Die();
+            }
         }
+
         onDamageTaken?.Invoke(damage);
     }
 
@@ -49,6 +61,7 @@ public class Building_Town : base_TownBuilding, IDamageable
     public void Respawn()
     {
         currentHealth = maxHealth;
+        leftoverDamage = 0f;
         onRespawned?.Invoke();
     }
 
