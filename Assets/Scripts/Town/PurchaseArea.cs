@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 /// <summary>
 /// Standalone pay zone. Link it to a Base_PurchaseableBuilding. With no target, the zone disables itself.
-/// Turrets keep their own zone and do not use this component.
 /// </summary>
 [RequireComponent(typeof(Collider))]
 public class PurchaseArea : MonoBehaviour
@@ -21,17 +20,27 @@ public class PurchaseArea : MonoBehaviour
     [Tooltip("After buying or upgrading, the player has to leave the zone before the next upgrade starts charging.")]
     [SerializeField] private bool requireReentryAfterPurchase = true;
 
+    [Header("After Purchase")]
+    [Tooltip("Size of this zone after the first buy, as a fraction of the original, if the building still has upgrades. 1 keeps the same size.")]
+    [Range(0.1f, 1f)]
+    [SerializeField] private float scaleAfterPurchase = 0.7f;
+
     [Header("Unlock Other Areas")]
     [Tooltip("These zones stay off until this building is bought, then they turn on. Use this for a door after a wall, a second turret after the first, and so on.")]
     [SerializeField] private List<PurchaseArea> areasToUnlockOnPurchase = new List<PurchaseArea>();
     [Tooltip("If on, listed areas are hidden at start until this one is bought. Turn off if you already disabled them in the scene.")]
     [SerializeField] private bool hideUnlockAreasUntilPurchased = true;
+    [Tooltip("Hides this zone in Awake. Use this on a later zone in a chain so it still hides even if the zone that would hide it is already off.")]
+    [SerializeField] private bool hideOnSpawn;
 
     private Transform player;
     private float timeInZone;
     private float coinAccumulator;
     private bool waitingForExit;
     private IPurchasable target;
+    private bool hidingAsLocked;
+    private Vector3 unpurchasedScale;
+    private bool capturedUnpurchasedScale;
 
     public IPurchasable Target => target;
     public float PaymentProgress => target != null ? target.PaymentProgress : 0f;
@@ -48,6 +57,7 @@ public class PurchaseArea : MonoBehaviour
         if (purchaseZone != null) purchaseZone.isTrigger = true;
 
         BindTarget(purchasable);
+        CaptureUnpurchasedScale();
 
         if (target == null)
         {
@@ -67,6 +77,11 @@ public class PurchaseArea : MonoBehaviour
         {
             Debug.LogError($"{name}: no GameObject tagged Player, the purchase zone won't work.", this);
         }
+
+        if (hideOnSpawn && (target == null || !target.IsPurchased))
+        {
+            HideAsLocked();
+        }
     }
 
     private void Start()
@@ -76,6 +91,7 @@ public class PurchaseArea : MonoBehaviour
         if (target.IsPurchased)
         {
             ActivateUnlockAreas();
+            ApplyPurchaseScale();
         }
         else if (hideUnlockAreasUntilPurchased)
         {
@@ -202,7 +218,38 @@ public class PurchaseArea : MonoBehaviour
     {
         ResetAfterPurchase();
         ActivateUnlockAreas();
+        ApplyPurchaseScale();
         OnPurchased?.Invoke();
+    }
+
+    private void CaptureUnpurchasedScale()
+    {
+        if (capturedUnpurchasedScale) return;
+
+        unpurchasedScale = transform.localScale;
+        capturedUnpurchasedScale = true;
+    }
+
+    private void ApplyPurchaseScale()
+    {
+        if (target == null || !target.IsPurchased || target.IsMaxLevel) return;
+        if (scaleAfterPurchase >= 1f) return;
+
+        CaptureUnpurchasedScale();
+        transform.localScale = unpurchasedScale * scaleAfterPurchase;
+        RefreshCostLabelScale();
+    }
+
+    private void RefreshCostLabelScale()
+    {
+        Transform labelTransform = transform.Find("CostLabel");
+        if (labelTransform == null) return;
+
+        Vector3 parentScale = transform.lossyScale;
+        labelTransform.localScale = new Vector3(
+            1f / Mathf.Max(0.01f, parentScale.x),
+            1f / Mathf.Max(0.01f, parentScale.y),
+            1f / Mathf.Max(0.01f, parentScale.z));
     }
 
     private void HandleUpgraded(int newLevel)
@@ -224,8 +271,21 @@ public class PurchaseArea : MonoBehaviour
         {
             PurchaseArea area = areasToUnlockOnPurchase[i];
             if (area == null || area == this) continue;
-            area.gameObject.SetActive(false);
+            area.HideAsLocked();
         }
+    }
+
+    /// <summary>
+    /// Hides this zone and any zones it would unlock, while this object is still active.
+    /// </summary>
+    public void HideAsLocked()
+    {
+        if (hidingAsLocked) return;
+
+        hidingAsLocked = true;
+        HideUnlockAreas();
+        gameObject.SetActive(false);
+        hidingAsLocked = false;
     }
 
     private void ActivateUnlockAreas()
@@ -243,6 +303,7 @@ public class PurchaseArea : MonoBehaviour
     /// </summary>
     public void Unlock()
     {
+        hideOnSpawn = false;
         gameObject.SetActive(true);
         enabled = true;
         if (purchaseZone != null) purchaseZone.enabled = true;

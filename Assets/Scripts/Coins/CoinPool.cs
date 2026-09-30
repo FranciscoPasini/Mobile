@@ -169,6 +169,14 @@ public class CoinPool : MonoBehaviour
         return coin;
     }
 
+    public void DropCoins(Vector3 position, int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            if (DropCoin(position) == null) return;
+        }
+    }
+
     public CoinType RollCoinType(int wave)
     {
         float total = 0f;

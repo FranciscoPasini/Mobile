@@ -22,8 +22,29 @@ MonoBehaviour:
   weaponBaseFireRate: 0.12
   weaponBaseBulletSpeed: 28
   weaponBaseAmmo: 30
-  weaponFireSound: {fileID: 0}
+  weaponFireSound: {fileID: 8300000, guid: 2668409377d693f47a604668da68f5a1, type: 3}
   bulletData: {fileID: 11400000, guid: a7c4e2f91b3d4e8a9f0c1d2e3b4a5c6d, type: 2}
+  scaling:
+    damage:
+      method: 1
+      rate: 0.15
+      maxFactor: 0
+    fireRate:
+      method: 5
+      rate: 0.08
+      maxFactor: 3
+    bulletSpeed:
+      method: 5
+      rate: 0.1
+      maxFactor: 2
+    range:
+      method: 5
+      rate: 0.06
+      maxFactor: 1.5
+    ammo:
+      method: 1
+      rate: 0.2
+      maxFactor: 0
   references:
     version: 2
     RefIds:

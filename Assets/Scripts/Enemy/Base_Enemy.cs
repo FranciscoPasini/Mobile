@@ -60,6 +60,8 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
     [SerializeField] private OneTimePickupPool oneTimePickupPool;
     [Tooltip("Experience the player gets for the kill.")]
     [SerializeField, Min(0)] private int experienceReward = 20;
+    [Tooltip("How many coins this enemy drops on death. Types still roll from the coin pool.")]
+    [SerializeField, Min(0)] private int coinDropCount = 1;
     [Tooltip("Receives the kill experience. Found in the scene if left empty.")]
     [SerializeField] private Player_ExperienceAndStats playerStats;
 
@@ -114,6 +116,9 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         agent.speed = chaseSpeed;
         // Make sure the agent can actually get within attack range before it stops moving.
         agent.stoppingDistance = Mathf.Min(stoppingDistance, attackRange);
+        // Fast enemies must not shove slower ones. They overlap instead of pushing.
+        agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+        Physics.IgnoreLayerCollision(gameObject.layer, gameObject.layer, true);
 
         if (target == null)
         {
@@ -259,9 +264,9 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         currentHealth = 0f;
 
         // Only real deaths drop loot. Pool cleanup through Despawn() doesn't.
-        if (coinPool != null)
+        if (coinPool != null && coinDropCount > 0)
         {
-            coinPool.DropCoin(transform.position);
+            coinPool.DropCoins(transform.position, coinDropCount);
         }
 
         if (weaponPickupPool != null)

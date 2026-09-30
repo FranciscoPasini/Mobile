@@ -21,6 +21,8 @@ MonoBehaviour:
   blinkRateEnd: 12
   radius: 8
   damage: 8
+  damageScaleFactor: 0.2
+  wavesPerScale: 2
   stunDuration: 1.5
   knockback: 1.2
   hitMask:

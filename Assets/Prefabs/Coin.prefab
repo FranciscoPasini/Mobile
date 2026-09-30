@@ -86,11 +86,13 @@ MonoBehaviour:
     m_Bits: 4294967295
   landedSpeed: 0.2
   maxDropTime: 3
-  lifetime: 10
+  lifetime: 25
+  blinkWarningTime: 5
+  blinkRateStart: 2
+  blinkRateEnd: 12
   flyStartSpeed: 10
   flyAcceleration: 40
   playerHeightOffset: 1
-  collectDistance: 0.54
   maxFlyTime: 3
   coinRenderer: {fileID: 6936352341583912039}
   typeVisuals:

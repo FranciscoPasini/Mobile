@@ -40,6 +40,7 @@ public class LevelUpPopup : MonoBehaviour
         new Upgrade_Class(UpgradeType.TownHealth, "Town Health", "The town gains max health and heals the added amount."),
         new Upgrade_Class(UpgradeType.ExperienceGain, "Experience Gain", "Kills grant more experience, so you level up faster."),
         new Upgrade_Class(UpgradeType.PickupDropChance, "Lucky Drops", "One-time pickups drop more often. +3% per level, up to +15%."),
+        new Upgrade_Class(UpgradeType.CoinMultiplier, "Coin Value", "Collected coins are worth more. Starts at 1x."),
     };
 
     private readonly List<int> candidateBuffer = new List<int>();
@@ -66,6 +67,7 @@ public class LevelUpPopup : MonoBehaviour
         EnsureUpgradeInPool(UpgradeType.WeaponRange, "Range", "Hit enemies from farther away.");
         EnsureUpgradeInPool(UpgradeType.ExperienceGain, "Experience Gain", "Kills grant more experience, so you level up faster.");
         EnsureUpgradeInPool(UpgradeType.PickupDropChance, "Lucky Drops", "One-time pickups drop more often. +3% per level, up to +15%.");
+        EnsureUpgradeInPool(UpgradeType.CoinMultiplier, "Coin Value", "Collected coins are worth more. Starts at 1x.");
         EnsureHealButton();
 
         HidePopup();

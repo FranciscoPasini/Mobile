@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Serialization;
 using System.Collections.Generic;
 using NaughtyAttributes;
 
@@ -7,15 +8,40 @@ using NaughtyAttributes;
 public class EnemySpawnEntry
 {
     public Base_Enemy prefab;
-    [Tooltip("Relative chance this type is picked. 0 never spawns.")]
-    [Min(0f)] public float spawnWeight = 10f;
+
     [Tooltip("First wave this type can appear on.")]
     [Min(1)] public int unlockWave = 1;
+
+    [Tooltip("Last wave this type can appear on. 0 = no end.")]
+    [Min(0)] public int maxWave = 0;
+
+    [FormerlySerializedAs("spawnWeight")]
+    [Tooltip("Weight on the unlock wave.")]
+    [Min(0f)] public float baseWeight = 10f;
+
+    [Tooltip("Added every wave after unlocking. Negative makes this type rarer over time.")]
+    public float weightPerWave = 0f;
+
+    [Min(0f)] public float minWeight = 0f;
+    [Min(0f)] public float maxWeight = 100f;
+
     [Tooltip("How many of this type are created up front.")]
     [Min(0)] public int initialSize = 5;
 
+    [Tooltip("0 = no cap. This type is not picked while this many are already alive.")]
+    [Min(0)] public int maxAlive = 0;
+
     [System.NonSerialized] public Queue<Base_Enemy> available;
     [System.NonSerialized] public int created;
+
+    public float GetWeight(int wave)
+    {
+        if (prefab == null || wave < unlockWave) return 0f;
+        if (maxWave > 0 && wave > maxWave) return 0f;
+
+        float weight = baseWeight + weightPerWave * (wave - unlockWave);
+        return Mathf.Clamp(weight, minWeight, Mathf.Max(minWeight, maxWeight));
+    }
 }
 
 public class EnemyPool : MonoBehaviour
@@ -220,7 +246,7 @@ public class EnemyPool : MonoBehaviour
         float total = 0f;
         for (int i = 0; i < enemyTypes.Count; i++)
         {
-            total += GetWeight(enemyTypes[i], wave);
+            total += GetSpawnWeight(enemyTypes[i], wave);
         }
 
         if (total <= 0f)
@@ -235,7 +261,7 @@ public class EnemyPool : MonoBehaviour
         float roll = Random.value * total;
         for (int i = 0; i < enemyTypes.Count; i++)
         {
-            float weight = GetWeight(enemyTypes[i], wave);
+            float weight = GetSpawnWeight(enemyTypes[i], wave);
             if (roll < weight) return enemyTypes[i];
             roll -= weight;
         }
@@ -245,8 +271,26 @@ public class EnemyPool : MonoBehaviour
 
     private static float GetWeight(EnemySpawnEntry entry, int wave)
     {
-        if (entry == null || entry.prefab == null || entry.spawnWeight <= 0f) return 0f;
-        return wave >= entry.unlockWave ? entry.spawnWeight : 0f;
+        if (entry == null || entry.prefab == null) return 0f;
+        return entry.GetWeight(wave);
+    }
+
+    private float GetSpawnWeight(EnemySpawnEntry entry, int wave)
+    {
+        float weight = GetWeight(entry, wave);
+        if (weight <= 0f) return 0f;
+        if (entry.maxAlive > 0 && CountActive(entry) >= entry.maxAlive) return 0f;
+        return weight;
+    }
+
+    private int CountActive(EnemySpawnEntry entry)
+    {
+        int count = 0;
+        for (int i = 0; i < active.Count; i++)
+        {
+            if (owners.TryGetValue(active[i], out EnemySpawnEntry owner) && owner == entry) count++;
+        }
+        return count;
     }
 
     private int GetWave()
@@ -283,7 +327,7 @@ public class EnemyPool : MonoBehaviour
         enemyTypes.Add(new EnemySpawnEntry
         {
             prefab = enemyPrefab,
-            spawnWeight = 10f,
+            baseWeight = 10f,
             unlockWave = 1,
             initialSize = initialSize
         });

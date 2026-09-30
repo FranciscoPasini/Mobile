@@ -11,6 +11,7 @@ public enum UpgradeType {
     WeaponAmmo,
     ExperienceGain,
     PickupDropChance,
+    CoinMultiplier,
 }
 
 /// <summary>

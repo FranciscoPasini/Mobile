@@ -1,7 +1,7 @@
 using System;
 
 /// <summary>
-/// Something a PurchaseArea can buy and upgrade. Turrets do not use this.
+/// Something a PurchaseArea can buy and upgrade.
 /// </summary>
 public interface IPurchasable
 {

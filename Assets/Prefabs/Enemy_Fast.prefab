@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 3896588848687516412}
   - component: {fileID: 7993380647679566521}
   m_Layer: 6
-  m_Name: Enemy
+  m_Name: Enemy_Fast
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32,7 +32,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2401302171399924372}
@@ -132,22 +132,22 @@ MonoBehaviour:
   attackLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  chaseSpeed: 4
-  stoppingDistance: 1.5
+  chaseSpeed: 7
+  stoppingDistance: 1.2
   detectionRange: 100
-  attackRange: 3
+  attackRange: 2.5
   attackSound: {fileID: 8300000, guid: 9e09abca763724549a4bf37e82d1666b, type: 3}
-  maxHealth: 5
-  currentHealth: 5
-  damage: 1
-  timeToAttack: 1.5
+  maxHealth: 3
+  currentHealth: 3
+  damage: 0.7
+  timeToAttack: 0.7
   pathUpdateInterval: 0.2
   pathUpdateMinTargetDelta: 0.5
   agent: {fileID: 7993380647679566521}
   coinPool: {fileID: 0}
   weaponPickupPool: {fileID: 0}
   oneTimePickupPool: {fileID: 0}
-  experienceReward: 20
+  experienceReward: 12
   coinDropCount: 1
   playerStats: {fileID: 0}
   scaling:
@@ -161,8 +161,8 @@ MonoBehaviour:
       maxFactor: 0
     speed:
       method: 5
-      rate: 0.08
-      maxFactor: 1.8
+      rate: 0.06
+      maxFactor: 1.4
     attackRate:
       method: 5
       rate: 0.08
@@ -179,7 +179,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 516148393976920516}
   serializedVersion: 5
-  m_Mass: 1
+  m_Mass: 0.6
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -207,17 +207,17 @@ NavMeshAgent:
   m_GameObject: {fileID: 516148393976920516}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.54
-  m_Speed: 3.5
-  m_Acceleration: 8
-  avoidancePriority: 50
-  m_AngularSpeed: 120
+  m_Radius: 0.5
+  m_Speed: 7
+  m_Acceleration: 14
+  avoidancePriority: 40
+  m_AngularSpeed: 180
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 0
-  m_Height: 1
-  m_BaseOffset: 0.5
+  m_Height: 0.75
+  m_BaseOffset: 0.375
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 0
 --- !u!1001 &2799438961692888447
@@ -229,8 +229,20 @@ PrefabInstance:
     m_TransformParent: {fileID: 3709884679715737694}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: b5fa609431bf13a4488a7d04c3895a60, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.84444
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b5fa609431bf13a4488a7d04c3895a60, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.84444
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b5fa609431bf13a4488a7d04c3895a60, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.84444
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b5fa609431bf13a4488a7d04c3895a60, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 0.036
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b5fa609431bf13a4488a7d04c3895a60, type: 3}
       propertyPath: m_LocalPosition.y
@@ -272,6 +284,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Enemy
       objectReference: {fileID: 0}
+    - target: {fileID: 7447323891562771888, guid: b5fa609431bf13a4488a7d04c3895a60, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b6d651ee5c679aa45853310c758cd2d3, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -47,6 +47,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet_Grenade
   bulletData: {fileID: 11400000, guid: 9e1b4c7d2a305f68b9c0d1e2f3a4b5c6, type: 2}
+  showTrail: 1
+  trailTailLength: 1.2
+  trailWidth: 0.08
+  trailColor: {r: 1, g: 0.82, b: 0.35, a: 0.95}
   explosionRadius: 3.5
   knockbackStrength: 2.5
   stunDuration: 0.7
@@ -57,6 +61,8 @@ MonoBehaviour:
   collideMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  explosionPrefab: {fileID: 0}
+  explosionSound: {fileID: 8300000, guid: 8e73161525c32e04584e75cdc8225a67, type: 3}
 --- !u!135 &3479321491847135551
 SphereCollider:
   m_ObjectHideFlags: 0

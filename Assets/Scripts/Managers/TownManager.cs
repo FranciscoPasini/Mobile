@@ -31,6 +31,7 @@ public class TownManager : MonoBehaviour
     //CURRENCY (PLACEHOLDER, MOVE TO A CURRENCY MANAGER LATER)
     [Header("Currency")]
     [SerializeField] private int startingCoins = 100;
+    [SerializeField] private Player_ExperienceAndStats playerStats;
     public static int Coins;
     public static event System.Action<int> OnCoinsChanged;
     public event Action OnWaveChanged;
@@ -38,6 +39,7 @@ public class TownManager : MonoBehaviour
     public event Action OnTownHealthChanged;
 
     private bool gameOver;
+    private static TownManager instance;
 
     public int Wave => CurrentWave;
 
@@ -49,9 +51,16 @@ public class TownManager : MonoBehaviour
     
     private void Awake()
     {
+        instance = this;
+
         //STATICS SURVIVE BETWEEN PLAY SESSIONS WHEN DOMAIN RELOAD IS OFF, SO RESET HERE
         Coins = startingCoins;
         OnCoinsChanged?.Invoke(Coins);
+
+        if (playerStats == null)
+        {
+            playerStats = FindFirstObjectByType<Player_ExperienceAndStats>();
+        }
     }
 
     private void Start()
@@ -85,6 +94,7 @@ public class TownManager : MonoBehaviour
     private void OnDestroy()
     {
         subscribeToEvents(false);
+        if (instance == this) instance = null;
     }
 
     private void Update()
@@ -140,7 +150,12 @@ public class TownManager : MonoBehaviour
     {
         if (amount <= 0) return;
 
-        Coins += amount;
+        float multiplier = instance != null && instance.playerStats != null
+            ? instance.playerStats.GetCoinMultiplier()
+            : 1f;
+
+        int granted = Mathf.Max(1, Mathf.RoundToInt(amount * Mathf.Max(1f, multiplier)));
+        Coins += granted;
         OnCoinsChanged?.Invoke(Coins);
     }
 

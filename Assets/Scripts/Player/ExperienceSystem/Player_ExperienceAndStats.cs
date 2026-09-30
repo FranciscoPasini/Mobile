@@ -43,6 +43,10 @@ public class Player_ExperienceAndStats : MonoBehaviour
     [SerializeField, Min(0)] private int pickupDropChanceLevel;
     [Tooltip("Adds to the one-time pickup drop chance. +3% per level, capped at +15%.")]
     [SerializeField] private StatScaling pickupDropChanceScaling = new StatScaling(ScalingMethod.Linear, 0.03f, 1.15f);
+    [SerializeField, Min(0)] private int coinMultiplierLevel;
+    [Tooltip("Starts at 1x coin value. Change method/rate/max here to tune how it grows.")]
+    [SerializeField] private StatScaling coinMultiplierScaling = new StatScaling(ScalingMethod.Linear, 0.15f, 0f);
+    [SerializeField, NaughtyAttributes.ReadOnly] private float currentCoinMultiplier = 1f;
 
 
     public Action onPlayerLevelUp;
@@ -59,6 +63,7 @@ public class Player_ExperienceAndStats : MonoBehaviour
         currentPlayerLevel = Mathf.Max(1, currentPlayerLevel);
         experienceToNextLevel = experienceCurve.GetExperienceToNextLevel(currentPlayerLevel);
         RefreshExperienceMultiplier();
+        RefreshCoinMultiplier();
 
         if (TownBuilding == null)
         {
@@ -132,6 +137,7 @@ public class Player_ExperienceAndStats : MonoBehaviour
             case UpgradeType.TownHealth: UpgradeTownHealth(); break;
             case UpgradeType.ExperienceGain: UpgradeExperienceGain(); break;
             case UpgradeType.PickupDropChance: UpgradePickupDropChance(); break;
+            case UpgradeType.CoinMultiplier: UpgradeCoinMultiplier(); break;
         }
     }
     #endregion
@@ -221,9 +227,23 @@ public class Player_ExperienceAndStats : MonoBehaviour
         onPlayerStatsUpgraded?.Invoke();
     }
 
+    public void UpgradeCoinMultiplier(int levels = 1)
+    {
+        if (levels <= 0) return;
+
+        coinMultiplierLevel += levels;
+        RefreshCoinMultiplier();
+        onPlayerStatsUpgraded?.Invoke();
+    }
+
     private void RefreshExperienceMultiplier()
     {
         currentExpMultiplier = expMultiplierScaling.GetFactor(expMultiplierLevel);
+    }
+
+    private void RefreshCoinMultiplier()
+    {
+        currentCoinMultiplier = coinMultiplierScaling.GetFactor(coinMultiplierLevel);
     }
 
     [NaughtyAttributes.Button("Upgrade Damage")]
@@ -253,12 +273,16 @@ public class Player_ExperienceAndStats : MonoBehaviour
     [NaughtyAttributes.Button("Upgrade Pickup Drop Chance")]
     private void upgradePickupDropChance() => UpgradePickupDropChance();
 
+    [NaughtyAttributes.Button("Upgrade Coin Multiplier")]
+    private void upgradeCoinMultiplier() => UpgradeCoinMultiplier();
+
     // Lets values typed into the inspector during play mode take effect.
     private void OnValidate()
     {
         currentPlayerLevel = Mathf.Max(1, currentPlayerLevel);
         experienceToNextLevel = experienceCurve.GetExperienceToNextLevel(currentPlayerLevel);
         RefreshExperienceMultiplier();
+        RefreshCoinMultiplier();
 
         if (!Application.isPlaying) return;
 
@@ -304,6 +328,11 @@ public class Player_ExperienceAndStats : MonoBehaviour
     {
         return pickupDropChanceScaling.GetFactor(pickupDropChanceLevel) - 1f;
     }
+
+    public float GetCoinMultiplier()
+    {
+        return currentCoinMultiplier;
+    }
     public int GetUpgradeLevel(UpgradeType upgrade)
     {
         switch (upgrade)
@@ -318,6 +347,7 @@ public class Player_ExperienceAndStats : MonoBehaviour
             case UpgradeType.TownHealth: return townHealthLevel;
             case UpgradeType.ExperienceGain: return expMultiplierLevel;
             case UpgradeType.PickupDropChance: return pickupDropChanceLevel;
+            case UpgradeType.CoinMultiplier: return coinMultiplierLevel;
             default: return 0;
         }
     }
@@ -334,6 +364,7 @@ public class Player_ExperienceAndStats : MonoBehaviour
             case UpgradeType.TownHealth: return townHealthScaling.IsCapped(townHealthLevel);
             case UpgradeType.ExperienceGain: return expMultiplierScaling.IsCapped(expMultiplierLevel);
             case UpgradeType.PickupDropChance: return pickupDropChanceScaling.IsCapped(pickupDropChanceLevel);
+            case UpgradeType.CoinMultiplier: return coinMultiplierScaling.IsCapped(coinMultiplierLevel);
             default: return false;
         }
     }

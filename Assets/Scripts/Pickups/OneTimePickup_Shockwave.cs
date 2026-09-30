@@ -13,7 +13,8 @@ public class OneTimePickup_Shockwave : Base_OneTimePickup
     {
         OneTimePickup_Shockwave_Data blastData = pickupData as OneTimePickup_Shockwave_Data;
         float radius = blastData != null ? blastData.Radius : 8f;
-        float damage = blastData != null ? blastData.Damage : 8f;
+        int wave = GetCurrentWave();
+        float damage = blastData != null ? blastData.GetDamage(wave) : 8f;
         float stun = blastData != null ? blastData.StunDuration : 1.5f;
         float knockback = blastData != null ? blastData.Knockback : 1.2f;
         LayerMask mask = blastData != null ? blastData.HitMask : (LayerMask)~0;
@@ -36,5 +37,11 @@ public class OneTimePickup_Shockwave : Base_OneTimePickup
             if (!enemy.IsAlive) continue;
             enemy.Knockback(origin, knockback, stun);
         }
+    }
+
+    private static int GetCurrentWave()
+    {
+        TownManager townManager = FindFirstObjectByType<TownManager>();
+        return townManager != null ? Mathf.Max(1, townManager.Wave) : 1;
     }
 }

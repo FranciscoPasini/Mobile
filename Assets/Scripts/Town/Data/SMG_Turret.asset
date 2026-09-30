@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b792a68255b4d934785e45a981b5b953, type: 3}
+  m_Name: SMG_Turret
+  m_EditorClassIdentifier: Assembly-CSharp::Building_Turret_Data
+  levels:
+  - cost: 200
+    bulletDamage: 2
+    bulletSpeed: 60
+    range: 10
+    fireRate: 0.4
+  infiniteLevels: 1
+  scaling:
+    costGrowth: 1.2
+    damageGrowth: 0.2
+    minFireRate: 0.2
+    fireRateApproach: 0.03
+    maxRange: 16
+    rangeApproach: 0.08
+    maxBulletSpeed: 80
+    bulletSpeedApproach: 0.08

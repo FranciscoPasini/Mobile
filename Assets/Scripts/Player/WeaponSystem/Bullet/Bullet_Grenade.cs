@@ -16,6 +16,8 @@ public class Bullet_Grenade : Base_Bullet
     [Tooltip("Optional. If empty, a fire/spark/smoke burst is created at runtime.")]
     [SerializeField] private ParticleSystem explosionPrefab;
 
+    [SerializeField] private AudioClip explosionSound;
+
     private Vector3 velocity;
     private bool exploded;
     private readonly Collider[] explosionHits = new Collider[32];
@@ -90,6 +92,11 @@ public class Bullet_Grenade : Base_Bullet
             float lifetime = fx.main.duration + fx.main.startLifetime.constantMax;
             Object.Destroy(fx.gameObject, Mathf.Max(0.5f, lifetime));
             return;
+        }
+
+        if (explosionSound != null)
+        {
+            AudioSource.PlayClipAtPoint(explosionSound, origin);
         }
 
         GrenadeVfx.SpawnExplosion(origin, explosionRadius);

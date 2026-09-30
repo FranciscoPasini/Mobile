@@ -5,7 +5,6 @@ using System.Collections.Generic;
 
 /// <summary>
 /// Buyable / upgradable town piece whose pay zone lives on a separate PurchaseArea object.
-/// Turrets keep their own built-in zone and do not use this.
 /// </summary>
 public class Base_PurchaseableBuilding : base_TownBuilding, IPurchasable
 {
@@ -36,7 +35,7 @@ public class Base_PurchaseableBuilding : base_TownBuilding, IPurchasable
 
     public bool IsPurchased => purchased;
     public int Level => level;
-    public bool IsMaxLevel => purchaseData == null || !purchaseData.HasLevel(level);
+    public bool IsMaxLevel => !HasPurchasableLevel(level);
     public int NextCost => IsMaxLevel ? 0 : nextCost;
     public int RemainingCost => IsMaxLevel ? 0 : Mathf.Max(0, nextCost - paidTowardNext);
     public float PaymentProgress => NextCost > 0 ? (float)paidTowardNext / NextCost : 0f;
@@ -104,7 +103,17 @@ public class Base_PurchaseableBuilding : base_TownBuilding, IPurchasable
 
     private void RefreshNextCost()
     {
-        nextCost = IsMaxLevel || purchaseData == null ? 0 : purchaseData.GetCost(level);
+        nextCost = IsMaxLevel ? 0 : GetPurchasableCost(level);
+    }
+
+    protected virtual bool HasPurchasableLevel(int index)
+    {
+        return purchaseData != null && purchaseData.HasLevel(index);
+    }
+
+    protected virtual int GetPurchasableCost(int index)
+    {
+        return purchaseData != null ? purchaseData.GetCost(index) : 0;
     }
 
     private void RefreshVisuals()

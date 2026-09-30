@@ -178,16 +178,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Building_Turret
   buildingType: 2
-  turretData: {fileID: 11400000, guid: aa53a14cacac3274e9df39b7f6a31afb, type: 2}
-  bulletData: {fileID: 11400000, guid: a7c4e2f91b3d4e8a9f0c1d2e3b4a5c6d, type: 2}
+  purchaseData: {fileID: 0}
   purchased: 0
   level: 0
   paidTowardNext: 0
-  purchaseZone: {fileID: 2902393163727936375}
-  paymentStartDelay: 0.3
-  paymentDuration: 2
-  minCoinsPerSecond: 5
-  requireReentryAfterPurchase: 1
+  objectsToEnable: []
+  objectsToDisable: []
+  unbuiltVisual: {fileID: 2652189751010015671}
+  builtVisual: {fileID: 9016015496921129723}
+  turretData: {fileID: 11400000, guid: aa53a14cacac3274e9df39b7f6a31afb, type: 2}
+  bulletData: {fileID: 11400000, guid: a7c4e2f91b3d4e8a9f0c1d2e3b4a5c6d, type: 2}
   firePoint: {fileID: 7220208264406711081}
   turretHead: {fileID: 2446782517247418653}
   turnSpeed: 360
@@ -196,8 +196,6 @@ MonoBehaviour:
     m_Bits: 64
   targetScanInterval: 1
   fireSound: {fileID: 0}
-  unbuiltVisual: {fileID: 2652189751010015671}
-  builtVisual: {fileID: 9016015496921129723}
   navMeshObstacle: {fileID: 4582101385929183061}
 --- !u!1 &5198022118313756188
 GameObject:
@@ -211,6 +209,7 @@ GameObject:
   - component: {fileID: 3800111729842311697}
   - component: {fileID: 55421506259321389}
   - component: {fileID: 2902393163727936375}
+  - component: {fileID: 8114000001}
   - component: {fileID: 6692894113322421984}
   - component: {fileID: 6192837465019283746}
   m_Layer: 0
@@ -313,6 +312,27 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &8114000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5198022118313756188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78012126c6968e6499d0a67399e623f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PurchaseArea
+  purchasable: {fileID: 499002044426418239}
+  purchaseZone: {fileID: 2902393163727936375}
+  paymentStartDelay: 0.3
+  paymentDuration: 2
+  minCoinsPerSecond: 5
+  requireReentryAfterPurchase: 1
+  areasToUnlockOnPurchase: []
+  hideUnlockAreasUntilPurchased: 1
+  hideOnSpawn: 0
 --- !u!114 &6692894113322421984
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -325,7 +345,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6079a3938cfb6d64a8db738364707cca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuyZoneVisual
-  purchaseArea: {fileID: 0}
+  purchaseArea: {fileID: 8114000001}
   turret: {fileID: 499002044426418239}
   fillColor: {r: 0, g: 1, b: 0, a: 1}
   fillSpeed: 3
@@ -342,7 +362,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4e8a91b7d2f4c6e9a1b3d5f70829416, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PurchaseCostLabel
-  purchaseArea: {fileID: 0}
+  purchaseArea: {fileID: 8114000001}
   turret: {fileID: 499002044426418239}
   label: {fileID: 0}
   worldOffset: {x: 0, y: 1.35, z: 0}

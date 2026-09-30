@@ -25,14 +25,14 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _BorderWidth: 0.06
+    - _BorderWidth: 0
     - _Cull: 2
     - _Fill: 0
     - _FillMode: 0
     - _Radius: 0.5
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 0.2}
-    - _BorderColor: {r: 1, g: 1, b: 1, a: 0.85}
+    - _BorderColor: {r: 1, g: 1, b: 1, a: 0.9098039}
     - _FillColor: {r: 0, g: 1, b: 0, a: 0.65}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

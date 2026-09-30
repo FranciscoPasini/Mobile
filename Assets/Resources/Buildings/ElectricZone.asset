@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e4b8c92d0f34a6e9b1c2d3e4f506172, type: 3}
   m_Name: ElectricZone
   m_EditorClassIdentifier: Assembly-CSharp::Building_ElectricZone_Data
-  costs: e8030000b00400001405000078050000dc05000040060000
-  infiniteLevels: 0
+  costs: f4010000
+  infiniteLevels: 1
   costGrowth: 1.15
   baseDamage: 7
   baseElectrifyInterval: 2
   damageScaling:
-    method: 1
+    method: 5
     rate: 0.25
     maxFactor: 0
   electrifySpeedScaling:
