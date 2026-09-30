@@ -10,7 +10,7 @@ using System.Collections.Generic;
 public class Base_PurchaseableBuilding : base_TownBuilding, IPurchasable
 {
     [Header("Data")]
-    [SerializeField] private Building_Purchaseable_Data purchaseData;
+    [SerializeField] protected Building_Purchaseable_Data purchaseData;
 
     [Header("State")]
     [SerializeField] private bool purchased;

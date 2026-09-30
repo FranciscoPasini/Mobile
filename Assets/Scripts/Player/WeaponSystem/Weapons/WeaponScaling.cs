@@ -127,6 +127,17 @@ public class StatScaling
         if (maxFactor > 1f) factor = Mathf.Min(factor, maxFactor);
         return Mathf.Max(factor, 1f);
     }
+
+    /// <summary>
+    /// True when another level would not raise the factor. Asymptotic curves never report capped.
+    /// </summary>
+    public bool IsCapped(int level)
+    {
+        if (method == ScalingMethod.None) return true;
+        if (method == ScalingMethod.Asymptotic) return false;
+        if (maxFactor <= 1f) return false;
+        return GetFactor(level + 1) <= GetFactor(level) + 0.0001f;
+    }
 }
 
 /// <summary>

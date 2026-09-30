@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e4b8c92d0f34a6e9b1c2d3e4f506172, type: 3}
+  m_Name: ElectricZone
+  m_EditorClassIdentifier: Assembly-CSharp::Building_ElectricZone_Data
+  costs: e8030000b00400001405000078050000dc05000040060000
+  infiniteLevels: 0
+  costGrowth: 1.15
+  baseDamage: 7
+  baseElectrifyInterval: 2
+  damageScaling:
+    method: 1
+    rate: 0.25
+    maxFactor: 0
+  electrifySpeedScaling:
+    method: 1
+    rate: 0.2
+    maxFactor: 2
+  maxElectrifyUpgrades: 5

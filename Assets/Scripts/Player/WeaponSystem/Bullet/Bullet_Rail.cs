@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Hitscan beam: damages and pierces enemies along a line, then draws a short trail.
@@ -9,8 +10,8 @@ public class Bullet_Rail : Base_Bullet
     [SerializeField, Min(1)] private int maxPierce = 8;
     [SerializeField, Min(1f)] private float maxDistance = 40f;
     [SerializeField, Min(0.02f)] private float trailDuration = 0.12f;
-    [SerializeField] private float trailWidth = 0.12f;
-    [SerializeField] private Color trailColor = new Color(0.4f, 0.9f, 1f, 1f);
+    [SerializeField, FormerlySerializedAs("trailWidth")] private float beamWidth = 0.12f;
+    [SerializeField, FormerlySerializedAs("trailColor")] private Color beamColor = new Color(0.4f, 0.9f, 1f, 1f);
     [SerializeField] private LayerMask hitMask = ~0;
 
     private LineRenderer trail;
@@ -18,6 +19,8 @@ public class Bullet_Rail : Base_Bullet
     private float trailTimer;
     private Color startColor;
     private Color endColor;
+
+    protected override bool UsesFlightTrail => false;
 
     protected override void OnInitialized()
     {
@@ -113,10 +116,10 @@ public class Bullet_Rail : Base_Bullet
         trail.positionCount = 2;
         trail.SetPosition(0, origin);
         trail.SetPosition(1, end);
-        trail.startWidth = trailWidth;
-        trail.endWidth = trailWidth * 0.4f;
-        startColor = trailColor;
-        endColor = new Color(trailColor.r, trailColor.g, trailColor.b, 0.15f);
+        trail.startWidth = beamWidth;
+        trail.endWidth = beamWidth * 0.4f;
+        startColor = beamColor;
+        endColor = new Color(beamColor.r, beamColor.g, beamColor.b, 0.15f);
         trail.startColor = startColor;
         trail.endColor = endColor;
     }

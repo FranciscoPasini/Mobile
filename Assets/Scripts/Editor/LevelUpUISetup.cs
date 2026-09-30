@@ -175,8 +175,11 @@ public static class LevelUpUISetup
         TextMeshProUGUI subtitle = CreateText("Subtitle", panel, "Choose an upgrade", 40f, FontStyles.Normal, Color.white);
         SetCentered(subtitle.rectTransform, new Vector2(0f, 330f), new Vector2(900f, 60f));
 
+        Button healButton = CreateHealButton(panel);
+        TMP_Text healLabel = healButton.GetComponentInChildren<TextMeshProUGUI>();
+
         RectTransform row = CreateRect("Cards", panel);
-        SetCentered(row, new Vector2(0f, -40f), new Vector2(1020f, 540f));
+        SetCentered(row, new Vector2(0f, -90f), new Vector2(1020f, 540f));
         HorizontalLayoutGroup layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
         layout.spacing = 30f;
         layout.childAlignment = TextAnchor.MiddleCenter;
@@ -195,6 +198,8 @@ public static class LevelUpUISetup
         var so = new SerializedObject(popup);
         so.FindProperty("playerStats").objectReferenceValue = stats;
         so.FindProperty("popupRoot").objectReferenceValue = panel.gameObject;
+        so.FindProperty("healButton").objectReferenceValue = healButton;
+        so.FindProperty("healButtonLabel").objectReferenceValue = healLabel;
         SerializedProperty cardList = so.FindProperty("cards");
         cardList.arraySize = CardCount;
         for (int i = 0; i < CardCount; i++)
@@ -258,6 +263,25 @@ public static class LevelUpUISetup
         so.ApplyModifiedPropertiesWithoutUndo();
 
         return upgradeCard;
+    }
+
+    private static Button CreateHealButton(Transform panel)
+    {
+        RectTransform heal = CreateRect("HealTownButton", panel);
+        SetCentered(heal, new Vector2(0f, 250f), new Vector2(980f, 100f));
+
+        Image background = AddImage(heal.gameObject, new Color(0.28f, 0.72f, 0.38f, 1f), Image.Type.Sliced);
+        Button button = heal.gameObject.AddComponent<Button>();
+        button.targetGraphic = background;
+        ColorBlock colors = button.colors;
+        colors.highlightedColor = new Color(0.4f, 0.85f, 0.48f, 1f);
+        colors.pressedColor = new Color(0.2f, 0.55f, 0.28f, 1f);
+        button.colors = colors;
+
+        TextMeshProUGUI label = CreateText("Label", heal, "Heal 50%", 48f, FontStyles.Bold, Color.white);
+        Stretch(label.rectTransform, 0f, 0f, 0f, 0f);
+
+        return button;
     }
 
     #endregion

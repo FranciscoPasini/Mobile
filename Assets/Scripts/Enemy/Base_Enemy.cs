@@ -56,6 +56,8 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
     [SerializeField] private CoinPool coinPool;
     [Tooltip("Weapons dropped on death. Found in the scene if left empty.")]
     [SerializeField] private WeaponPickupPool weaponPickupPool;
+    [Tooltip("Town heals and other one-shot pickups. Found in the scene if left empty.")]
+    [SerializeField] private OneTimePickupPool oneTimePickupPool;
     [Tooltip("Experience the player gets for the kill.")]
     [SerializeField, Min(0)] private int experienceReward = 20;
     [Tooltip("Receives the kill experience. Found in the scene if left empty.")]
@@ -89,6 +91,11 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         if (weaponPickupPool == null)
         {
             weaponPickupPool = FindFirstObjectByType<WeaponPickupPool>();
+        }
+
+        if (oneTimePickupPool == null)
+        {
+            oneTimePickupPool = FindFirstObjectByType<OneTimePickupPool>();
         }
 
         if (playerStats == null)
@@ -260,6 +267,16 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         if (weaponPickupPool != null)
         {
             weaponPickupPool.TryDrop(transform.position);
+        }
+
+        if (oneTimePickupPool == null)
+        {
+            oneTimePickupPool = FindFirstObjectByType<OneTimePickupPool>();
+        }
+
+        if (oneTimePickupPool != null)
+        {
+            oneTimePickupPool.TryDrop(transform.position);
         }
 
         if (playerStats != null)

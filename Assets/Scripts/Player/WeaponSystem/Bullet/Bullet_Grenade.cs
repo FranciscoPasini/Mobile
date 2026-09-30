@@ -13,6 +13,8 @@ public class Bullet_Grenade : Base_Bullet
     [SerializeField] private float gravity = 14f;
     [SerializeField] private LayerMask explosionMask = ~0;
     [SerializeField] private LayerMask collideMask = ~0;
+    [Tooltip("Optional. If empty, a fire/spark/smoke burst is created at runtime.")]
+    [SerializeField] private ParticleSystem explosionPrefab;
 
     private Vector3 velocity;
     private bool exploded;
@@ -74,6 +76,32 @@ public class Bullet_Grenade : Base_Bullet
             enemy.Knockback(origin, knockbackStrength, stunDuration);
         }
 
+        PlayExplosion(origin);
+        HideMesh();
         DestroyBullet();
+    }
+
+    private void PlayExplosion(Vector3 origin)
+    {
+        if (explosionPrefab != null)
+        {
+            ParticleSystem fx = Instantiate(explosionPrefab, origin, Quaternion.identity);
+            fx.Play();
+            float lifetime = fx.main.duration + fx.main.startLifetime.constantMax;
+            Object.Destroy(fx.gameObject, Mathf.Max(0.5f, lifetime));
+            return;
+        }
+
+        GrenadeVfx.SpawnExplosion(origin, explosionRadius);
+    }
+
+    private void HideMesh()
+    {
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] is ParticleSystemRenderer || renderers[i] is TrailRenderer) continue;
+            renderers[i].enabled = false;
+        }
     }
 }

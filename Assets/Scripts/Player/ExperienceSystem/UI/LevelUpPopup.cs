@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using NaughtyAttributes;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Shows random upgrade cards when the player levels up and applies the one picked.
@@ -15,10 +17,14 @@ public class LevelUpPopup : MonoBehaviour
     [SerializeField] private GameObject popupRoot;
     [Tooltip("One card per choice. Three cards = three choices.")]
     [SerializeField] private List<UpgradeCard> cards = new List<UpgradeCard>();
+    [Tooltip("Always-visible town heal. Created at runtime if left empty.")]
+    [SerializeField] private Button healButton;
+    [SerializeField] private TMP_Text healButtonLabel;
 
     [Header("Behaviour")]
     [Tooltip("Freezes the game while the player chooses.")]
     [SerializeField] private bool pauseWhileChoosing = true;
+    [SerializeField, Range(0.05f, 1f)] private float townHealPercent = 0.5f;
 
     [Header("Upgrade Pool")]
     [Tooltip("Upgrades that can appear. Entries sharing a type never show at the same time.")]
@@ -33,6 +39,7 @@ public class LevelUpPopup : MonoBehaviour
         new Upgrade_Class(UpgradeType.PlayerPickupRange, "Pickup Range", "Collect coins from farther away."),
         new Upgrade_Class(UpgradeType.TownHealth, "Town Health", "The town gains max health and heals the added amount."),
         new Upgrade_Class(UpgradeType.ExperienceGain, "Experience Gain", "Kills grant more experience, so you level up faster."),
+        new Upgrade_Class(UpgradeType.PickupDropChance, "Lucky Drops", "One-time pickups drop more often. +3% per level, up to +15%."),
     };
 
     private readonly List<int> candidateBuffer = new List<int>();
@@ -56,7 +63,10 @@ public class LevelUpPopup : MonoBehaviour
             Debug.LogWarning($"{name}: popupRoot is this GameObject, so the popup stops listening once hidden. Use a child panel.", this);
         }
 
+        EnsureUpgradeInPool(UpgradeType.WeaponRange, "Range", "Hit enemies from farther away.");
         EnsureUpgradeInPool(UpgradeType.ExperienceGain, "Experience Gain", "Kills grant more experience, so you level up faster.");
+        EnsureUpgradeInPool(UpgradeType.PickupDropChance, "Lucky Drops", "One-time pickups drop more often. +3% per level, up to +15%.");
+        EnsureHealButton();
 
         HidePopup();
     }
@@ -107,7 +117,7 @@ public class LevelUpPopup : MonoBehaviour
         }
 
         int shown = FillCards();
-        if (shown == 0)
+        if (shown == 0 && healButton == null)
         {
             Debug.LogWarning($"{name}: no upgrades or cards to show.", this);
             pendingLevelUps = 0;
@@ -117,6 +127,7 @@ public class LevelUpPopup : MonoBehaviour
 
         isShowing = true;
         if (popupRoot != null) popupRoot.SetActive(true);
+        RefreshHealButton();
         Pause();
     }
 
@@ -128,7 +139,10 @@ public class LevelUpPopup : MonoBehaviour
         candidateBuffer.Clear();
         for (int i = 0; i < upgrades.Count; i++)
         {
-            if (upgrades[i] != null) candidateBuffer.Add(i);
+            Upgrade_Class entry = upgrades[i];
+            if (entry == null) continue;
+            if (playerStats != null && playerStats.IsUpgradeCapped(entry.UpgradeType)) continue;
+            candidateBuffer.Add(i);
         }
 
         // Fisher-Yates, then take entries in order while skipping repeated types.
@@ -184,6 +198,25 @@ public class LevelUpPopup : MonoBehaviour
         HidePopup();
     }
 
+    private void HandleHealPicked()
+    {
+        if (!isShowing) return;
+
+        if (healButton != null) healButton.interactable = false;
+        if (playerStats != null) playerStats.HealTownPercent(townHealPercent);
+
+        pendingLevelUps = Mathf.Max(0, pendingLevelUps - 1);
+
+        if (pendingLevelUps > 0)
+        {
+            FillCards();
+            RefreshHealButton();
+            return;
+        }
+
+        HidePopup();
+    }
+
     private void HidePopup()
     {
         isShowing = false;
@@ -195,6 +228,101 @@ public class LevelUpPopup : MonoBehaviour
 
         if (popupRoot != null && popupRoot != gameObject) popupRoot.SetActive(false);
         Unpause();
+    }
+
+    private void OnDestroy()
+    {
+        if (healButton != null)
+        {
+            healButton.onClick.RemoveListener(HandleHealPicked);
+        }
+    }
+
+    private void RefreshHealButton()
+    {
+        if (healButton == null) return;
+
+        healButton.gameObject.SetActive(true);
+        healButton.interactable = true;
+        RefreshHealLabel();
+    }
+
+    private void RefreshHealLabel()
+    {
+        if (healButtonLabel != null)
+        {
+            healButtonLabel.text = $"Heal {Mathf.RoundToInt(townHealPercent * 100f)}%";
+        }
+    }
+
+    private void EnsureHealButton()
+    {
+        if (healButton == null)
+        {
+            CreateHealButton();
+        }
+
+        if (healButton != null)
+        {
+            healButton.onClick.AddListener(HandleHealPicked);
+        }
+
+        RefreshHealLabel();
+    }
+
+    private void CreateHealButton()
+    {
+        if (popupRoot == null) return;
+
+        Transform cardsRow = popupRoot.transform.Find("Cards");
+        if (cardsRow is RectTransform cardsRect)
+        {
+            cardsRect.anchoredPosition = new Vector2(cardsRect.anchoredPosition.x, -90f);
+        }
+
+        GameObject go = new GameObject("HealTownButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        go.layer = popupRoot.layer;
+        go.transform.SetParent(popupRoot.transform, false);
+
+        RectTransform rect = go.GetComponent<RectTransform>();
+        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = new Vector2(0f, 250f);
+        rect.sizeDelta = new Vector2(980f, 100f);
+
+        if (cardsRow != null)
+        {
+            go.transform.SetSiblingIndex(cardsRow.GetSiblingIndex());
+        }
+
+        Image image = go.GetComponent<Image>();
+        image.color = new Color(0.28f, 0.72f, 0.38f, 1f);
+
+        Button button = go.GetComponent<Button>();
+        button.targetGraphic = image;
+        ColorBlock colors = button.colors;
+        colors.highlightedColor = new Color(0.4f, 0.85f, 0.48f, 1f);
+        colors.pressedColor = new Color(0.2f, 0.55f, 0.28f, 1f);
+        button.colors = colors;
+
+        GameObject labelGo = new GameObject("Label", typeof(RectTransform), typeof(CanvasRenderer));
+        labelGo.layer = popupRoot.layer;
+        labelGo.transform.SetParent(go.transform, false);
+
+        RectTransform labelRect = labelGo.GetComponent<RectTransform>();
+        labelRect.anchorMin = Vector2.zero;
+        labelRect.anchorMax = Vector2.one;
+        labelRect.offsetMin = Vector2.zero;
+        labelRect.offsetMax = Vector2.zero;
+
+        TextMeshProUGUI label = labelGo.AddComponent<TextMeshProUGUI>();
+        label.alignment = TextAlignmentOptions.Center;
+        label.fontSize = 48f;
+        label.fontStyle = FontStyles.Bold;
+        label.color = Color.white;
+        label.raycastTarget = false;
+
+        healButton = button;
+        healButtonLabel = label;
     }
 
     private void Pause()

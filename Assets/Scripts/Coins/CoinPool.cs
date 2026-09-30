@@ -192,6 +192,29 @@ public class CoinPool : MonoBehaviour
     }
 
     /// <summary>
+    /// Pulls coins inside a ground-radius around origin. They fly to flyTarget, or the player if that is empty.
+    /// </summary>
+    public void CollectInRadius(Vector3 origin, float radius, Transform flyTarget = null)
+    {
+        if (radius <= 0f || active.Count == 0) return;
+
+        float sqrRadius = radius * radius;
+        for (int i = 0; i < active.Count; i++)
+        {
+            Base_Coin coin = active[i];
+            if (coin == null || coin.IsCollecting) continue;
+
+            Vector3 delta = coin.transform.position - origin;
+            delta.y = 0f;
+            if (delta.sqrMagnitude <= sqrRadius)
+            {
+                if (flyTarget != null) coin.CollectTo(flyTarget);
+                else coin.Collect();
+            }
+        }
+    }
+
+    /// <summary>
     /// Pulls every coin currently on the map to the player, at any distance.
     /// </summary>
     [Button("Collect All Coins")]

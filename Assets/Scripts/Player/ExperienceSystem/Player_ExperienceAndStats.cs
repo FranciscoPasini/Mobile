@@ -40,6 +40,9 @@ public class Player_ExperienceAndStats : MonoBehaviour
     [Tooltip("Approaches 3x experience from kills. High levels let you climb the XP curve much faster.")]
     [SerializeField] private StatScaling expMultiplierScaling = new StatScaling(ScalingMethod.Asymptotic, 0.12f, 3f);
     [SerializeField, NaughtyAttributes.ReadOnly] private float currentExpMultiplier = 1f;
+    [SerializeField, Min(0)] private int pickupDropChanceLevel;
+    [Tooltip("Adds to the one-time pickup drop chance. +3% per level, capped at +15%.")]
+    [SerializeField] private StatScaling pickupDropChanceScaling = new StatScaling(ScalingMethod.Linear, 0.03f, 1.15f);
 
 
     public Action onPlayerLevelUp;
@@ -128,6 +131,7 @@ public class Player_ExperienceAndStats : MonoBehaviour
             case UpgradeType.PlayerPickupRange: UpgradePlayerPickupRange(); break;
             case UpgradeType.TownHealth: UpgradeTownHealth(); break;
             case UpgradeType.ExperienceGain: UpgradeExperienceGain(); break;
+            case UpgradeType.PickupDropChance: UpgradePickupDropChance(); break;
         }
     }
     #endregion
@@ -209,6 +213,14 @@ public class Player_ExperienceAndStats : MonoBehaviour
         onPlayerStatsUpgraded?.Invoke();
     }
 
+    public void UpgradePickupDropChance(int levels = 1)
+    {
+        if (levels <= 0) return;
+
+        pickupDropChanceLevel += levels;
+        onPlayerStatsUpgraded?.Invoke();
+    }
+
     private void RefreshExperienceMultiplier()
     {
         currentExpMultiplier = expMultiplierScaling.GetFactor(expMultiplierLevel);
@@ -237,6 +249,9 @@ public class Player_ExperienceAndStats : MonoBehaviour
 
     [NaughtyAttributes.Button("Upgrade Experience Gain")]
     private void upgradeExperienceGain() => UpgradeExperienceGain();
+
+    [NaughtyAttributes.Button("Upgrade Pickup Drop Chance")]
+    private void upgradePickupDropChance() => UpgradePickupDropChance();
 
     // Lets values typed into the inspector during play mode take effect.
     private void OnValidate()
@@ -281,6 +296,14 @@ public class Player_ExperienceAndStats : MonoBehaviour
     {
         return pickupRangeScaling.GetFactor(pickupRangeLevel);
     }
+
+    /// <summary>
+    /// Extra drop chance added to the one-time pickup pool (0.03 = +3%, capped at 0.15).
+    /// </summary>
+    public float GetPickupDropChanceBonus()
+    {
+        return pickupDropChanceScaling.GetFactor(pickupDropChanceLevel) - 1f;
+    }
     public int GetUpgradeLevel(UpgradeType upgrade)
     {
         switch (upgrade)
@@ -294,8 +317,35 @@ public class Player_ExperienceAndStats : MonoBehaviour
             case UpgradeType.PlayerPickupRange: return pickupRangeLevel;
             case UpgradeType.TownHealth: return townHealthLevel;
             case UpgradeType.ExperienceGain: return expMultiplierLevel;
+            case UpgradeType.PickupDropChance: return pickupDropChanceLevel;
             default: return 0;
         }
+    }
+
+    /// <summary>
+    /// True when this upgrade has a hard cap and another level would not improve it.
+    /// </summary>
+    public bool IsUpgradeCapped(UpgradeType upgrade)
+    {
+        switch (upgrade)
+        {
+            case UpgradeType.PlayerSpeed: return moveSpeedScaling.IsCapped(moveSpeedLevel);
+            case UpgradeType.PlayerPickupRange: return pickupRangeScaling.IsCapped(pickupRangeLevel);
+            case UpgradeType.TownHealth: return townHealthScaling.IsCapped(townHealthLevel);
+            case UpgradeType.ExperienceGain: return expMultiplierScaling.IsCapped(expMultiplierLevel);
+            case UpgradeType.PickupDropChance: return pickupDropChanceScaling.IsCapped(pickupDropChanceLevel);
+            default: return false;
+        }
+    }
+
+    public void HealTownPercent(float percent)
+    {
+        if (TownBuilding == null || percent <= 0f) return;
+
+        float amount = TownBuilding.maxHealth * percent;
+        if (amount <= 0f) return;
+
+        TownBuilding.Heal(amount);
     }
     #endregion
 }

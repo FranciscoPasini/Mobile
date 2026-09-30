@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d02e13f4c55a6b7d8e9f0a1b2c3d4e, type: 3}
+  m_Name: CoinMagnet
+  m_EditorClassIdentifier: Assembly-CSharp::Building_CoinMagnet_Data
+  costs: 96000000c8000000fa0000002c0100005e01000090010000
+  infiniteLevels: 0
+  costGrowth: 1.15
+  baseRange: 5
+  rangeScaling:
+    method: 1
+    rate: 0.2
+    maxFactor: 2
+  maxRangeUpgrades: 5

@@ -6,4 +6,6 @@ public enum Enum_BuildingType
     Resource,
     Tower,
     Obstacle,
+    ElectricZone,
+    CoinMagnet,
 }

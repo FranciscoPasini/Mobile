@@ -50,8 +50,8 @@ MonoBehaviour:
   maxPierce: 8
   maxDistance: 40
   trailDuration: 0.12
-  trailWidth: 0.12
-  trailColor: {r: 0.4, g: 0.9, b: 1, a: 1}
+  beamWidth: 0.12
+  beamColor: {r: 0.4, g: 0.9, b: 1, a: 1}
   hitMask:
     serializedVersion: 2
     m_Bits: 4294967295

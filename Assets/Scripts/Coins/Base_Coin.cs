@@ -74,6 +74,8 @@ public class Base_Coin : MonoBehaviour, IPoolable
 
     private Rigidbody body;
     private Transform player;
+    private Transform flyTarget;
+    private float flyHeightOffset;
     private CoinState state;
     private float lifeTimer;
     private float dropTimer;
@@ -162,6 +164,8 @@ public class Base_Coin : MonoBehaviour, IPoolable
         flySpeed = 0f;
         flyTimer = 0f;
         blinkPhase = 0f;
+        flyTarget = null;
+        flyHeightOffset = 0f;
         SetVisible(true);
         state = CoinState.Dropping;
 
@@ -187,13 +191,24 @@ public class Base_Coin : MonoBehaviour, IPoolable
 
     /// <summary>
     /// Sends the coin flying to the player from any distance, even mid-drop. Safe to call more than once.
-    /// Used by the magnet zone and by collect-all effects.
+    /// Used by the player pickup zone and by collect-all effects.
     /// </summary>
     public void Collect()
     {
+        CollectTo(player, playerHeightOffset);
+    }
+
+    /// <summary>
+    /// Sends the coin flying to a world target, even mid-drop. Safe to call more than once.
+    /// </summary>
+    public void CollectTo(Transform target, float heightOffset = 0f)
+    {
         if (state == CoinState.Collecting) return;
 
-        if (player == null)
+        flyTarget = target;
+        flyHeightOffset = heightOffset;
+
+        if (flyTarget == null)
         {
             Award();
             return;
@@ -210,7 +225,7 @@ public class Base_Coin : MonoBehaviour, IPoolable
     {
         if (state == CoinState.Collecting)
         {
-            FlyToPlayer();
+            FlyToTarget();
             return;
         }
 
@@ -293,9 +308,9 @@ public class Base_Coin : MonoBehaviour, IPoolable
         body.interpolation = RigidbodyInterpolation.None;
     }
 
-    private void FlyToPlayer()
+    private void FlyToTarget()
     {
-        if (player == null)
+        if (flyTarget == null)
         {
             Award();
             return;
@@ -304,11 +319,9 @@ public class Base_Coin : MonoBehaviour, IPoolable
         flyTimer += Time.deltaTime;
         flySpeed += flyAcceleration * Time.deltaTime;
 
-        // Re-read the target every frame so the coin chases a moving player.
-        Vector3 target = player.position + Vector3.up * playerHeightOffset;
+        Vector3 target = flyTarget.position + Vector3.up * flyHeightOffset;
         transform.position = Vector3.MoveTowards(transform.position, target, flySpeed * Time.deltaTime);
 
-        // MoveTowards lands exactly on the target, so no arrival distance is needed.
         if (transform.position == target || flyTimer >= maxFlyTime)
         {
             Award();

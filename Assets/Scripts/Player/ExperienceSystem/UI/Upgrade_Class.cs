@@ -10,6 +10,7 @@ public enum UpgradeType {
     WeaponRange,
     WeaponAmmo,
     ExperienceGain,
+    PickupDropChance,
 }
 
 /// <summary>
