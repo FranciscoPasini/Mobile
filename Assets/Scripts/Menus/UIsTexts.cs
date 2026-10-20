@@ -1,10 +1,11 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIsTexts : MonoBehaviour
 {
     [SerializeField] private TMPro.TextMeshProUGUI waveText;
     [SerializeField] private TMPro.TextMeshProUGUI coinsText;
-    [SerializeField] private TMPro.TextMeshProUGUI townHealthText;
+    [SerializeField] private Image townHealthFillImage;
     [SerializeField] private TMPro.TextMeshProUGUI ammoText;
 
     [SerializeField] private TownManager townManager;
@@ -44,7 +45,7 @@ public class UIsTexts : MonoBehaviour
         }
     }
 
-    void Start() 
+    void Start()
     {
         coinsText.text = "Coins: " + TownManager.Coins.ToString();
         waveText.text = "Wave: " + townManager.CurrentWave.ToString();
@@ -54,7 +55,6 @@ public class UIsTexts : MonoBehaviour
 
     void Update()
     {
-        // Pickup ammo drops every shot; those shots do not fire a weapon-changed event.
         if (playerWeaponSystem != null && playerWeaponSystem.HasPickedUpWeapon)
         {
             RefreshAmmo();
@@ -73,7 +73,19 @@ public class UIsTexts : MonoBehaviour
 
     private void RefreshTownHealth()
     {
-        townHealthText.text = "Town Health: " + townManager.GetTownHealth().ToString() + " / " + townManager.GetTownMaxHealth().ToString();
+        if (townHealthFillImage == null) return;
+
+        float currentHealth = townManager.GetTownHealth();
+        float maxHealth = townManager.GetTownMaxHealth();
+
+        if (maxHealth > 0)
+        {
+            townHealthFillImage.fillAmount = currentHealth / maxHealth;
+        }
+        else
+        {
+            townHealthFillImage.fillAmount = 0f;
+        }
     }
 
     private void RefreshAmmo()
