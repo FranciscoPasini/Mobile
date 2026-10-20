@@ -1,5 +1,5 @@
 using UnityEngine;
-using GoogleMobileAds.Api;
+//using GoogleMobileAds.Api;
 
 public class InterstitialAdManager : MonoBehaviour
 {
@@ -13,20 +13,21 @@ public class InterstitialAdManager : MonoBehaviour
     // Tu ID REAL de la unidad de anuncio intersticial (el que me pasaste)
     private const string REAL_AD_UNIT_ID = "ca-app-pub-9482470954655619/6420041799";
 
-    private InterstitialAd _interstitialAd;
+  //  private InterstitialAd _interstitialAd;
 
     // Esto decide automáticamente qué ID usar según el tilde del Inspector
     private string AdUnitId => useTestAdUnit ? TEST_AD_UNIT_ID : REAL_AD_UNIT_ID;
 
     private void Start()
     {
-        MobileAds.Initialize(initStatus =>
+        //MobileAds.Initialize(initStatus =>
         {
             Debug.Log("[AdMob] SDK Inicializado.");
-            LoadInterstitialAd();
-        });
+            //LoadInterstitialAd();
+        }
     }
 
+    /*
     public void LoadInterstitialAd()
     {
         if (_interstitialAd != null)
@@ -92,4 +93,6 @@ public class InterstitialAdManager : MonoBehaviour
             _interstitialAd.Destroy();
         }
     }
+
+    */
 }

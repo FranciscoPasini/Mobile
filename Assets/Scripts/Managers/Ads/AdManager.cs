@@ -1,5 +1,5 @@
 using UnityEngine;
-using GoogleMobileAds.Api;
+//using GoogleMobileAds.Api;
 
 public class AdManager : MonoBehaviour
 {
@@ -22,9 +22,9 @@ public class AdManager : MonoBehaviour
     private void Start()
     {
         // Inicializar el SDK de Google Mobile Ads
-        MobileAds.Initialize(initStatus =>
+        //MobileAds.Initialize(initStatus =>
         {
             Debug.Log("AdMob Inicializado correctamente.");
-        });
+        }
     }
 }

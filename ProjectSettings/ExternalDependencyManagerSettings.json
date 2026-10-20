@@ -1,5 +1,5 @@
 {
-    "edmEnabled": true,
+    "edmEnabled": false,
     "selectionPresented": false,
-    "edmWasInstalled": true
+    "edmWasInstalled": false
 }
