@@ -47,8 +47,8 @@ public class UIsTexts : MonoBehaviour
 
     void Start()
     {
-        coinsText.text = "Coins: " + TownManager.Coins.ToString();
-        waveText.text = "Wave: " + townManager.CurrentWave.ToString();
+        coinsText.text = TownManager.Coins.ToString();
+        waveText.text = townManager.CurrentWave.ToString();
         RefreshTownHealth();
         RefreshAmmo();
     }
@@ -63,12 +63,12 @@ public class UIsTexts : MonoBehaviour
 
     private void OnCoinsChanged(int coins)
     {
-        coinsText.text = "Coins: " + coins.ToString();
+        coinsText.text = coins.ToString();
     }
 
     private void OnWaveChanged()
     {
-        waveText.text = "Wave: " + townManager.CurrentWave.ToString();
+        waveText.text = townManager.CurrentWave.ToString();
     }
 
     private void RefreshTownHealth()
@@ -104,6 +104,6 @@ public class UIsTexts : MonoBehaviour
 
         lastShownInfinite = infinite;
         lastShownAmmo = ammo;
-        ammoText.text = infinite ? "Ammo: Infinite" : "Ammo: " + ammo.ToString();
+        ammoText.text = infinite ? "Infinite" : ammo.ToString();
     }
 }
