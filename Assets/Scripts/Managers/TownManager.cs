@@ -42,6 +42,7 @@ public class TownManager : MonoBehaviour
     private static TownManager instance;
 
     public int Wave => CurrentWave;
+    public float WaveTimerPercent => nextWaveTime > 0f ? Mathf.Clamp01(currentWaveTime / nextWaveTime) : 0f;
 
 
 

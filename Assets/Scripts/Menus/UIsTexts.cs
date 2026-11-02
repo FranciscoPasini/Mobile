@@ -1,24 +1,28 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class UIsTexts : MonoBehaviour
 {
     [SerializeField] private TMPro.TextMeshProUGUI waveText;
     [SerializeField] private TMPro.TextMeshProUGUI coinsText;
-    [SerializeField] private Image townHealthFillImage;
     [SerializeField] private TMPro.TextMeshProUGUI ammoText;
+
+    [Header("Feedback (optional)")]
+    [SerializeField] private UIPunch coinsPunch;
+    [SerializeField] private UIPunch wavePunch;
+    [SerializeField] private Color coinsGainedColor = new Color(0.45f, 1f, 0.45f);
+    [SerializeField] private Color coinsSpentColor = new Color(1f, 0.4f, 0.4f);
 
     [SerializeField] private TownManager townManager;
     [SerializeField] private PlayerWeaponSystem playerWeaponSystem;
 
     private int lastShownAmmo = int.MinValue;
     private bool lastShownInfinite;
+    private int lastCoins;
 
     void OnEnable()
     {
         TownManager.OnCoinsChanged += OnCoinsChanged;
         townManager.OnWaveChanged += OnWaveChanged;
-        townManager.OnTownHealthChanged += RefreshTownHealth;
 
         if (playerWeaponSystem == null)
         {
@@ -36,7 +40,6 @@ public class UIsTexts : MonoBehaviour
     {
         TownManager.OnCoinsChanged -= OnCoinsChanged;
         townManager.OnWaveChanged -= OnWaveChanged;
-        townManager.OnTownHealthChanged -= RefreshTownHealth;
 
         if (playerWeaponSystem != null)
         {
@@ -47,9 +50,9 @@ public class UIsTexts : MonoBehaviour
 
     void Start()
     {
-        coinsText.text = TownManager.Coins.ToString();
+        lastCoins = TownManager.Coins;
+        coinsText.text = lastCoins.ToString();
         waveText.text = townManager.CurrentWave.ToString();
-        RefreshTownHealth();
         RefreshAmmo();
     }
 
@@ -64,28 +67,18 @@ public class UIsTexts : MonoBehaviour
     private void OnCoinsChanged(int coins)
     {
         coinsText.text = coins.ToString();
+
+        if (coinsPunch != null && coins != lastCoins)
+        {
+            coinsPunch.Play(coins > lastCoins ? coinsGainedColor : coinsSpentColor);
+        }
+        lastCoins = coins;
     }
 
     private void OnWaveChanged()
     {
         waveText.text = townManager.CurrentWave.ToString();
-    }
-
-    private void RefreshTownHealth()
-    {
-        if (townHealthFillImage == null) return;
-
-        float currentHealth = townManager.GetTownHealth();
-        float maxHealth = townManager.GetTownMaxHealth();
-
-        if (maxHealth > 0)
-        {
-            townHealthFillImage.fillAmount = currentHealth / maxHealth;
-        }
-        else
-        {
-            townHealthFillImage.fillAmount = 0f;
-        }
+        if (wavePunch != null) wavePunch.Play();
     }
 
     private void RefreshAmmo()
@@ -104,6 +97,6 @@ public class UIsTexts : MonoBehaviour
 
         lastShownInfinite = infinite;
         lastShownAmmo = ammo;
-        ammoText.text = infinite ? "Infinite" : ammo.ToString();
+        ammoText.text = infinite ? "INF" : ammo.ToString();
     }
 }
