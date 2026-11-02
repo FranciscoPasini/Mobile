@@ -3,29 +3,29 @@ using Inputs = UnityEngine.InputSystem.EnhancedTouch;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private GameObject Player;
+    [SerializeField] protected GameObject Player;
     [SerializeField] private GameObject KnobController;
     [SerializeField] private GameObject KnobBackController;
 
     [SerializeField] private float joystickRadius = 100f;
     [Tooltip("Speed before upgrades.")]
-    [SerializeField] private float playerSpeed = 5f;
+    [SerializeField] protected float playerSpeed = 5f;
     [Tooltip("Source of the move speed upgrades. Found automatically if left empty.")]
-    [SerializeField] private Player_ExperienceAndStats playerStats;
+    [SerializeField] protected Player_ExperienceAndStats playerStats;
     [Tooltip("Degrees per second the player turns toward the movement direction.")]
-    [SerializeField] private float turnSpeed = 720f;
+    [SerializeField] protected float turnSpeed = 720f;
     [Tooltip("Joystick input below this doesn't rotate the player, so a resting thumb doesn't jitter the facing.")]
-    [SerializeField] private float rotationDeadZone = 0.1f;
+    [SerializeField] protected float rotationDeadZone = 0.1f;
 
 
     private Vector2 initialKnobObjectPosition;
 
     private Vector2 joystickInput;
-    private float currentPlayerSpeed;
+    protected float currentPlayerSpeed;
 
-    void Awake()
+    protected virtual void Awake()
     {
-        Inputs.EnhancedTouchSupport.Enable();
+        EnableTouchControls();
 
         if (playerStats == null)
         {
@@ -35,10 +35,9 @@ public class PlayerController : MonoBehaviour
         CalculatedPlayerSpeed();
     }
 
-    private void OnEnable()
+    protected virtual void OnEnable()
     {
-        Inputs.Touch.onFingerDown += SaveLocation;
-        Inputs.Touch.onFingerUp += DisableKnobBackController;
+        SubscribeTouchEvents();
 
         if (playerStats != null)
         {
@@ -46,9 +45,10 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void OnDisable()
+    protected virtual void OnDisable()
     {
-        Inputs.EnhancedTouchSupport.Disable();
+        UnsubscribeTouchEvents();
+        DisableTouchControls();
 
         if (playerStats != null)
         {
@@ -56,15 +56,38 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // Hooks virtuales para que las clases hijas puedan anular el input táctil.
+    protected virtual void EnableTouchControls()
+    {
+        Inputs.EnhancedTouchSupport.Enable();
+    }
+
+    protected virtual void DisableTouchControls()
+    {
+        Inputs.EnhancedTouchSupport.Disable();
+    }
+
+    protected virtual void SubscribeTouchEvents()
+    {
+        Inputs.Touch.onFingerDown += SaveLocation;
+        Inputs.Touch.onFingerUp += DisableKnobBackController;
+    }
+
+    protected virtual void UnsubscribeTouchEvents()
+    {
+        Inputs.Touch.onFingerDown -= SaveLocation;
+        Inputs.Touch.onFingerUp -= DisableKnobBackController;
+    }
 
     void Start()
     {
         KnobBackController.SetActive(false);
     }
-    private void Update()
+
+    protected virtual void Update()
     {
         DetectTouch();
-        MovePlayer();
+        MovePlayer(joystickInput);
     }
 
     private void DetectTouch()
@@ -82,7 +105,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        // Si hay m�s de 2 toques, desactivar el joystick
+        // Si hay más de 2 toques, desactivar el joystick
         if (touchCount >= 2)
         {
             joystickInput = Vector2.zero;
@@ -113,12 +136,12 @@ public class PlayerController : MonoBehaviour
         joystickInput = direction / joystickRadius;
     }
 
-    private void MovePlayer()
+    protected void MovePlayer(Vector2 input)
     {
         Vector3 movement = new Vector3(
-            joystickInput.x,
+            input.x,
             0f,
-            joystickInput.y
+            input.y
         );
 
         Player.transform.position +=
@@ -141,7 +164,7 @@ public class PlayerController : MonoBehaviour
 
     void SaveLocation(Inputs.Finger finger)
     {
-        // Si ya hay m�s de 2 toques, no activamos el knob
+        // Si ya hay más de 2 toques, no activamos el knob
         if (Inputs.Touch.activeTouches.Count >= 2)
             return;
 
