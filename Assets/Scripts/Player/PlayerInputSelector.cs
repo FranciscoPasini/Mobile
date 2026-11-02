@@ -28,12 +28,16 @@ public class PlayerInputSelector : MonoBehaviour
     public void UseJoystick()
     {
         SetGyroscopeActive(false);
+        settingsPanel.SetActive(false);
+        pauseManager.Resume();
     }
 
     // Llamar desde un botón de UI para usar el giroscopio.
     public void UseGyroscope()
     {
         SetGyroscopeActive(true);
+        settingsPanel.SetActive(false);
+        pauseManager.Resume();
     }
 
     // Llamar desde un botón de UI para alternar entre ambos.
