@@ -9178,7 +9178,7 @@ MonoBehaviour:
   smoothing: 5
   tiltForFullSpeed: 30
   tiltDeadZone: 2
-  invertX: 0
+  invertX: 1
   invertY: 0
 --- !u!222 &1593232255450775964
 CanvasRenderer:
