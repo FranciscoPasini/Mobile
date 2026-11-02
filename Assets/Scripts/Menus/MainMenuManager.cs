@@ -6,14 +6,23 @@ public class MainMenuManager : MonoBehaviour
 {
     [SerializeField] private string level;
     [SerializeField] private GameObject settingsPanel;
-    public void PlayButton() 
+    [SerializeField] private InterstitialAdManager interstitialAdManager;
+
+
+    public void PlayButton()
     {
-        SceneManager.LoadScene(level);
+        interstitialAdManager.ShowInterstitial(() =>
+        {
+            SceneManager.LoadScene(level);
+        });
     }
 
     public void Exit()
     {
-        Application.Quit();
+        interstitialAdManager.ShowInterstitial(() =>
+        {
+            Application.Quit();
+        });
     }
 
     public void OpenSettings()
