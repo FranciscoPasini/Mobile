@@ -13,6 +13,7 @@ public class PlayerWeaponSystem : MonoBehaviour
 
     public Action OnActiveWeaponChanged;
     public Action OnWeaponStatsChanged;
+    public Action<Base_Weapon> OnWeaponPickedUp;
 
     void Awake()
     {
@@ -107,6 +108,7 @@ public class PlayerWeaponSystem : MonoBehaviour
         pickedUpWeapon.ResetAmmo();
         pickedUpWeapon.onWeaponOutOfAmmo += HandlePickedUpWeaponOutOfAmmo;
         OnActiveWeaponChanged?.Invoke();
+        OnWeaponPickedUp?.Invoke(pickedUpWeapon);
     }
 
     private void HandlePickedUpWeaponOutOfAmmo()

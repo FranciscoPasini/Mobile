@@ -14,11 +14,16 @@ public class PurchaseCostLabel : MonoBehaviour
     [SerializeField] private Building_Turret turret;
     [SerializeField] private TextMeshPro label;
     [SerializeField] private Vector3 worldOffset = new Vector3(0f, 1.35f, 0f);
-    [SerializeField] private float fontSize = 2.6f;
-    [SerializeField] private Color textColor = Color.white;
+    [SerializeField] private float fontSize = 6f;
+    [SerializeField] private Color textColor = new Color(1f, 0.85f, 0.25f);
+    [SerializeField] private float outlineWidth = 0.3f;
+    [Tooltip("How much the number grows each time a coin is paid.")]
+    [SerializeField] private float payPulse = 0.15f;
 
     private Transform cam;
     private int lastShown = int.MinValue;
+    private Vector3 labelBaseScale;
+    private float pulse;
 
     private void Awake()
     {
@@ -102,6 +107,15 @@ public class PurchaseCostLabel : MonoBehaviour
         labelTransform.position = transform.position + worldOffset;
         labelTransform.rotation = cam.rotation;
         RefreshAmount(false);
+
+        // The purchase area rescales the label after buying, so read the base scale from the parent each frame.
+        Vector3 parentScale = transform.lossyScale;
+        labelBaseScale = new Vector3(
+            1f / Mathf.Max(0.01f, parentScale.x),
+            1f / Mathf.Max(0.01f, parentScale.y),
+            1f / Mathf.Max(0.01f, parentScale.z));
+        pulse = Mathf.MoveTowards(pulse, 0f, Time.deltaTime * 2f);
+        labelTransform.localScale = labelBaseScale * (1f + pulse);
     }
 
     private void HandleProgress(float progress)
@@ -133,6 +147,7 @@ public class PurchaseCostLabel : MonoBehaviour
         int remaining = SourceRemainingCost();
         if (!force && remaining == lastShown) return;
 
+        if (!force && remaining < lastShown) pulse = payPulse;
         lastShown = remaining;
         SetLabelVisible(true);
         label.SetText("{0}", remaining);
@@ -178,19 +193,20 @@ public class PurchaseCostLabel : MonoBehaviour
         label = textObject.AddComponent<TextMeshPro>();
         label.text = "0";
         label.fontSize = fontSize;
+        label.fontStyle = FontStyles.Bold;
         label.alignment = TextAlignmentOptions.Center;
         label.color = textColor;
         label.textWrappingMode = TextWrappingModes.NoWrap;
         label.overflowMode = TextOverflowModes.Overflow;
         label.raycastTarget = false;
-        label.rectTransform.sizeDelta = new Vector2(4f, 1.2f);
-        label.outlineWidth = 0.22f;
-        label.outlineColor = new Color(0f, 0f, 0f, 0.9f);
+        label.rectTransform.sizeDelta = new Vector2(6f, 2f);
+        label.outlineWidth = outlineWidth;
+        label.outlineColor = new Color(0f, 0f, 0f, 1f);
 
         if (label.fontMaterial != null)
         {
             label.fontMaterial.EnableKeyword(ShaderUtilities.Keyword_Outline);
-            label.fontMaterial.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.22f);
+            label.fontMaterial.SetFloat(ShaderUtilities.ID_OutlineWidth, outlineWidth);
         }
 
         Renderer textRenderer = label.GetComponent<Renderer>();

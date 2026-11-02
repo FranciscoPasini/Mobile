@@ -202,6 +202,8 @@ public static class UIStyleSetup
         TextMeshProUGUI waveText = CreateWaveBadge(topBar, out nextWaveFill);
 
         CreateWaveBanner(hudParent, townManager, nextWaveFill);
+        CreateBuildingNamePopup(hudParent);
+        CreateWeaponPickupPopup(hudParent);
 
         var so = new SerializedObject(texts);
         so.FindProperty("waveText").objectReferenceValue = waveText;
@@ -350,6 +352,103 @@ public static class UIStyleSetup
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 
+    [MenuItem("Tools/Game/Add Building Name Popup")]
+    public static void AddBuildingNamePopup()
+    {
+        Canvas canvas = FindRootCanvas();
+        if (canvas == null)
+        {
+            Debug.LogError("Open the Game scene first (needs a Canvas).");
+            return;
+        }
+
+        LoadAssets();
+        Undo.SetCurrentGroupName("Add Building Name Popup");
+        int undoGroup = Undo.GetCurrentGroup();
+
+        var safeArea = Object.FindFirstObjectByType<SafeArea>(FindObjectsInactive.Include);
+        CreateBuildingNamePopup(safeArea != null ? safeArea.transform : canvas.transform);
+
+        Finish(canvas, undoGroup, "Building name popup added.");
+    }
+
+    private static void CreateBuildingNamePopup(Transform parent)
+    {
+        RemoveExisting(parent, "BuildingNamePopup");
+
+        // Below the top bar, above the wave banner.
+        RectTransform root = CreateRect("BuildingNamePopup", parent);
+        SetAnchoredCenter(root, new Vector2(0.5f, 0.5f), new Vector2(0f, 560f), new Vector2(1000f, 200f));
+        CanvasGroup group = root.gameObject.AddComponent<CanvasGroup>();
+        group.alpha = 0f;
+        group.interactable = false;
+        group.blocksRaycasts = false;
+
+        Image backing = CreateImage("Backing", root, GetGlowSprite(), new Color(0f, 0f, 0f, 0.6f));
+        Stretch(backing.rectTransform, -60f, -60f, -40f, -40f);
+
+        TextMeshProUGUI nameText = CreateText("Name", root, "BUILDING", 80f, Color.white, true);
+        AnchorTopBand(nameText.rectTransform, 10f, 110f);
+
+        TextMeshProUGUI infoText = CreateText("Info", root, "BUY", 38f, SoftWhite, true);
+        infoText.characterSpacing = 4f;
+        AnchorTopBand(infoText.rectTransform, 125f, 60f);
+
+        var popup = root.gameObject.AddComponent<BuildingNamePopup>();
+        var so = new SerializedObject(popup);
+        so.FindProperty("group").objectReferenceValue = group;
+        so.FindProperty("nameText").objectReferenceValue = nameText;
+        so.FindProperty("infoText").objectReferenceValue = infoText;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    [MenuItem("Tools/Game/Add Weapon Pickup Popup")]
+    public static void AddWeaponPickupPopup()
+    {
+        Canvas canvas = FindRootCanvas();
+        if (canvas == null)
+        {
+            Debug.LogError("Open the Game scene first (needs a Canvas).");
+            return;
+        }
+
+        LoadAssets();
+        Undo.SetCurrentGroupName("Add Weapon Pickup Popup");
+        int undoGroup = Undo.GetCurrentGroup();
+
+        var safeArea = Object.FindFirstObjectByType<SafeArea>(FindObjectsInactive.Include);
+        CreateWeaponPickupPopup(safeArea != null ? safeArea.transform : canvas.transform);
+
+        Finish(canvas, undoGroup, "Weapon pickup popup added.");
+    }
+
+    private static void CreateWeaponPickupPopup(Transform parent)
+    {
+        RemoveExisting(parent, "WeaponPickupPopup");
+
+        // Just under the player, who stands in the middle of the screen.
+        RectTransform root = CreateRect("WeaponPickupPopup", parent);
+        SetAnchoredCenter(root, new Vector2(0.5f, 0.5f), new Vector2(0f, -300f), new Vector2(1000f, 160f));
+        CanvasGroup group = root.gameObject.AddComponent<CanvasGroup>();
+        group.alpha = 0f;
+        group.interactable = false;
+        group.blocksRaycasts = false;
+
+        // No background, so an outline keeps the rainbow letters readable.
+        TextMeshProUGUI text = CreateText("Text", root, "WEAPON", 96f, Color.white, true);
+        Stretch(text.rectTransform, 0f, 0f, 0f, 0f);
+        text.richText = true;
+        text.outlineWidth = 0.25f;
+        text.outlineColor = new Color32(0, 0, 0, 255);
+
+        var popup = root.gameObject.AddComponent<WeaponPickupPopup>();
+        var so = new SerializedObject(popup);
+        so.FindProperty("weaponSystem").objectReferenceValue = Object.FindFirstObjectByType<PlayerWeaponSystem>(FindObjectsInactive.Include);
+        so.FindProperty("group").objectReferenceValue = group;
+        so.FindProperty("text").objectReferenceValue = text;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
     private static void StylePauseButton(Transform canvas)
     {
         Transform pause = FindChild(canvas, "PauseButton");
@@ -421,6 +520,10 @@ public static class UIStyleSetup
         so.FindProperty("townManager").objectReferenceValue = townManager;
         so.FindProperty("wavesText").objectReferenceValue = waves;
         so.ApplyModifiedPropertiesWithoutUndo();
+
+        var townSo = new SerializedObject(townManager);
+        townSo.FindProperty("gameOverScreen").objectReferenceValue = panel.gameObject;
+        townSo.ApplyModifiedProperties();
 
         Transform buttons = panel.Find("ButtonPanel");
         if (buttons != null)
@@ -606,8 +709,12 @@ public static class UIStyleSetup
             importer.mipmapEnabled = false;
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.SaveAndReimport();
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
         }
-        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+
+        Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        if (sprite == null) Debug.LogError($"UI Style Setup: could not load sprite '{path}'. Run the tool again.");
+        return sprite;
     }
 
     #endregion

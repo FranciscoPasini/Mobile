@@ -8,6 +8,8 @@ using UnityEngine;
 public abstract class Base_OneTimePickup : MonoBehaviour, IPoolable
 {
     public event System.Action<Base_OneTimePickup> Despawned;
+    /// <summary>Fired when any pickup's effect is applied. Used by the on-screen name popup.</summary>
+    public static event System.Action<Base_OneTimePickup> OnCollected;
 
     [SerializeField] protected Base_OneTimePickup_Data pickupData;
 
@@ -260,6 +262,7 @@ public abstract class Base_OneTimePickup : MonoBehaviour, IPoolable
     private void Award()
     {
         ApplyEffect();
+        OnCollected?.Invoke(this);
         Despawn();
     }
 

@@ -9,6 +9,8 @@ using System.Collections.Generic;
 public class Base_PurchaseableBuilding : base_TownBuilding, IPurchasable
 {
     [Header("Data")]
+    [Tooltip("Shown on screen when the player stands in the buy zone. Uses the object name if empty.")]
+    [SerializeField] private string buildingName;
     [SerializeField] protected Building_Purchaseable_Data purchaseData;
 
     [Header("State")]
@@ -33,6 +35,7 @@ public class Base_PurchaseableBuilding : base_TownBuilding, IPurchasable
 
     private int nextCost;
 
+    public string BuildingName => string.IsNullOrWhiteSpace(buildingName) ? name : buildingName;
     public bool IsPurchased => purchased;
     public int Level => level;
     public bool IsMaxLevel => !HasPurchasableLevel(level);

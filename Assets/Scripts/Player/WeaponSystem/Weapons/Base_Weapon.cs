@@ -38,6 +38,8 @@ public class Base_Weapon
 
     public Action onWeaponOutOfAmmo;
 
+    public string WeaponName => weaponName;
+
 
 
     public void Initialize(Base_Weapon_Data weaponData, WeaponStatLevels statLevels = default)

@@ -168,5 +168,5 @@ MonoBehaviour:
   turret: {fileID: 0}
   label: {fileID: 0}
   worldOffset: {x: 0, y: 1.35, z: 0}
-  fontSize: 4
-  textColor: {r: 1, g: 1, b: 1, a: 1}
+  fontSize: 6
+  textColor: {r: 1, g: 0.85, b: 0.25, a: 1}

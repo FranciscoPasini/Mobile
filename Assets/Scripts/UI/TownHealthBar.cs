@@ -35,6 +35,8 @@ public class TownHealthBar : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float lowHealthThreshold = 0.3f;
 
+    private int lastHealth = -1;
+    private int lastMaxHealth = -1;
     private float targetPercent = 1f;
     private float shownPercent = 1f;
     private float chipPercent = 1f;
@@ -70,8 +72,11 @@ public class TownHealthBar : MonoBehaviour
 
     private void Refresh()
     {
-        int max = townManager.GetTownMaxHealth();
-        int current = Mathf.Max(0, townManager.GetTownHealth());
+        lastHealth = townManager.GetTownHealth();
+        lastMaxHealth = townManager.GetTownMaxHealth();
+
+        int max = lastMaxHealth;
+        int current = Mathf.Max(0, lastHealth);
         targetPercent = max > 0 ? (float)current / max : 0f;
 
         // Healing: the chip should not lag behind, snap it up.
@@ -90,6 +95,9 @@ public class TownHealthBar : MonoBehaviour
     private void Update()
     {
         float dt = Time.unscaledDeltaTime;
+
+        // Max health can change without an event (upgrades), so check every frame.
+        if (townManager.GetTownHealth() != lastHealth || townManager.GetTownMaxHealth() != lastMaxHealth) Refresh();
 
         shownPercent = Mathf.Lerp(shownPercent, targetPercent, 1f - Mathf.Exp(-fillSpeed * dt));
 

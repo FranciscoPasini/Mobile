@@ -197,7 +197,9 @@ public class TownManager : MonoBehaviour
     {
         gameOver = true;
         Time.timeScale = 0f;
-        gameOverScreen.SetActive(true);
+
+        if (gameOverScreen != null) gameOverScreen.SetActive(true);
+        else Debug.LogError("Town Manager: no Game Over Screen assigned, nothing to show on defeat.", this);
         ResetCoins();
     }
 

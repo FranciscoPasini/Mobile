@@ -21,6 +21,8 @@ public class UIsTexts : MonoBehaviour
 
     void OnEnable()
     {
+        if (townManager == null) townManager = FindFirstObjectByType<TownManager>();
+
         TownManager.OnCoinsChanged += OnCoinsChanged;
         townManager.OnWaveChanged += OnWaveChanged;
 

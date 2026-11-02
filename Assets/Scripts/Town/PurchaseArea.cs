@@ -42,7 +42,16 @@ public class PurchaseArea : MonoBehaviour
     private Vector3 unpurchasedScale;
     private bool capturedUnpurchasedScale;
 
+    /// <summary>Fired when the player steps into / out of any purchase area. Used by the on-screen name popup.</summary>
+    public static event System.Action<PurchaseArea> OnPlayerEntered;
+    public static event System.Action<PurchaseArea> OnPlayerExited;
+
+    private bool playerInside;
+
     public IPurchasable Target => target;
+    public string BuildingName => purchasable != null ? purchasable.BuildingName : name;
+    public bool IsPurchased => target != null && target.IsPurchased;
+    public int Level => target != null ? target.Level : 0;
     public float PaymentProgress => target != null ? target.PaymentProgress : 0f;
     public int RemainingCost => target != null ? target.RemainingCost : 0;
     public bool IsMaxLevel => target == null || target.IsMaxLevel;
@@ -107,6 +116,7 @@ public class PurchaseArea : MonoBehaviour
     private void OnDisable()
     {
         Subscribe(false);
+        SetPlayerInside(false);
     }
 
     private void OnValidate()
@@ -169,7 +179,10 @@ public class PurchaseArea : MonoBehaviour
             return;
         }
 
-        if (!IsPlayerInZone())
+        bool inZone = IsPlayerInZone();
+        SetPlayerInside(inZone);
+
+        if (!inZone)
         {
             timeInZone = 0f;
             coinAccumulator = 0f;
@@ -207,6 +220,15 @@ public class PurchaseArea : MonoBehaviour
         Vector3 point = player.position;
         point.y = purchaseZone.bounds.center.y;
         return (purchaseZone.ClosestPoint(point) - point).sqrMagnitude < 0.0001f;
+    }
+
+    private void SetPlayerInside(bool inside)
+    {
+        if (playerInside == inside) return;
+
+        playerInside = inside;
+        if (inside) OnPlayerEntered?.Invoke(this);
+        else OnPlayerExited?.Invoke(this);
     }
 
     private void HandleProgress(float progress)
@@ -330,6 +352,7 @@ public class PurchaseArea : MonoBehaviour
 
     private void DisableArea()
     {
+        SetPlayerInside(false);
         if (purchaseZone != null) purchaseZone.enabled = false;
         enabled = false;
     }

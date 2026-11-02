@@ -15,7 +15,8 @@ public class Building_Town : base_TownBuilding, IDamageable
     private float leftoverDamage;
 
 
-    private void Start()
+    // Awake, not Start, so the HUD never reads the health before it is set.
+    private void Awake()
     {
         currentHealth = maxHealth;
         leftoverDamage = 0f;
