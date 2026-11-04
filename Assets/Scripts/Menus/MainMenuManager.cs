@@ -1,4 +1,3 @@
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,30 +7,50 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private InterstitialAdManager interstitialAdManager;
 
-
     public void PlayButton()
     {
-        interstitialAdManager.ShowInterstitial(() =>
+        Time.timeScale = 1f;
+
+        if (string.IsNullOrEmpty(level))
         {
-            SceneManager.LoadScene(level);
-        });
+            Debug.LogError("MainMenuManager: no scene name set on Play.", this);
+            return;
+        }
+
+        if (interstitialAdManager != null)
+        {
+            interstitialAdManager.ShowInterstitial(LoadGame);
+        }
+        else
+        {
+            LoadGame();
+        }
     }
 
     public void Exit()
     {
-        interstitialAdManager.ShowInterstitial(() =>
+        if (interstitialAdManager != null)
+        {
+            interstitialAdManager.ShowInterstitial(Application.Quit);
+        }
+        else
         {
             Application.Quit();
-        });
+        }
     }
 
     public void OpenSettings()
     {
-        settingsPanel.SetActive(true);
+        if (settingsPanel != null) settingsPanel.SetActive(true);
     }
 
     public void CloseSettings()
     {
-        settingsPanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+    }
+
+    private void LoadGame()
+    {
+        SceneManager.LoadScene(level);
     }
 }

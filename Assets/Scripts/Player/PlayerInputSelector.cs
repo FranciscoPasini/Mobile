@@ -28,16 +28,16 @@ public class PlayerInputSelector : MonoBehaviour
     public void UseJoystick()
     {
         SetGyroscopeActive(false);
-        settingsPanel.SetActive(false);
-        pauseManager.Resume();
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (pauseManager != null) pauseManager.Resume();
     }
 
     // Llamar desde un botón de UI para usar el giroscopio.
     public void UseGyroscope()
     {
         SetGyroscopeActive(true);
-        settingsPanel.SetActive(false);
-        pauseManager.Resume();
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (pauseManager != null) pauseManager.Resume();
     }
 
     // Llamar desde un botón de UI para alternar entre ambos.
@@ -48,10 +48,10 @@ public class PlayerInputSelector : MonoBehaviour
 
     private void SetGyroscopeActive(bool useGyro)
     {
-        joystickController.enabled = !useGyro;
-        gyroscopeController.enabled = useGyro;
+        if (joystickController != null) joystickController.enabled = !useGyro;
+        if (gyroscopeController != null) gyroscopeController.enabled = useGyro;
 
-        if (useGyro)
+        if (useGyro && gyroscopeController != null)
         {
             gyroscopeController.Calibrate();
         }

@@ -27,18 +27,26 @@ public class WaveBanner : MonoBehaviour
         if (banner != null) banner.alpha = 0f;
     }
 
-    private void OnEnable() => townManager.OnWaveChanged += Show;
-    private void OnDisable() => townManager.OnWaveChanged -= Show;
+    private void OnEnable()
+    {
+        if (townManager == null) townManager = FindFirstObjectByType<TownManager>();
+        if (townManager != null) townManager.OnWaveChanged += Show;
+    }
+
+    private void OnDisable()
+    {
+        if (townManager != null) townManager.OnWaveChanged -= Show;
+    }
 
     private void Show()
     {
-        if (bannerText != null) bannerText.text = $"WAVE {townManager.CurrentWave}";
+        if (bannerText != null && townManager != null) bannerText.text = $"WAVE {townManager.CurrentWave}";
         time = 0f;
     }
 
     private void Update()
     {
-        if (nextWaveFill != null) nextWaveFill.fillAmount = townManager.WaveTimerPercent;
+        if (nextWaveFill != null && townManager != null) nextWaveFill.fillAmount = townManager.WaveTimerPercent;
 
         if (banner == null || time > popTime + holdTime + fadeTime) return;
 

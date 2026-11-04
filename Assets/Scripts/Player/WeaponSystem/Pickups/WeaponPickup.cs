@@ -31,7 +31,10 @@ public class WeaponPickup : MonoBehaviour, IPoolable
     [Header("Visuals")]
     [SerializeField] private Renderer pickupRenderer;
     [SerializeField] private SpriteRenderer iconRenderer;
-    [SerializeField] private float spinSpeed = 140f;
+    [SerializeField] private float spinSpeed = 50f;
+    [SerializeField] private float hoverHeight = 0.18f;
+    [SerializeField] private float hoverSpeed = 2.2f;
+    [SerializeField] private Color glowColor = new Color(1f, 0.75f, 0.2f);
 
     private enum State { Dropping, Resting, Collecting }
 
@@ -48,6 +51,9 @@ public class WeaponPickup : MonoBehaviour, IPoolable
     private float blinkPhase;
     private float baseMagnetRadius;
     private Vector3 baseMagnetSize;
+    private Light glow;
+    private Vector3 restPosition;
+    private float hoverTime;
 
     public bool IsCollecting => state == State.Collecting;
 
@@ -70,6 +76,7 @@ public class WeaponPickup : MonoBehaviour, IPoolable
         if (iconRenderer == null) iconRenderer = GetComponentInChildren<SpriteRenderer>();
 
         CacheMagnetSize();
+        glow = PickupVisual.EnsureGlow(transform, glowColor);
     }
 
     public void SetPlayer(Transform playerTransform, PlayerWeaponSystem system)
@@ -163,12 +170,15 @@ public class WeaponPickup : MonoBehaviour, IPoolable
             if (settled || dropTimer >= maxDropTime)
             {
                 FreezeBody();
+                restPosition = transform.position;
+                hoverTime = 0f;
                 state = State.Resting;
             }
         }
         else
         {
-            if (spinSpeed != 0f) transform.Rotate(0f, spinSpeed * Time.deltaTime, 0f, Space.World);
+            hoverTime += Time.deltaTime;
+            PickupVisual.HoverSpin(transform, restPosition, spinSpeed, hoverHeight, hoverSpeed, hoverTime);
             if (IsPlayerInMagnet())
             {
                 Collect();
@@ -269,5 +279,6 @@ public class WeaponPickup : MonoBehaviour, IPoolable
     {
         if (pickupRenderer != null && pickupRenderer.enabled != visible) pickupRenderer.enabled = visible;
         if (iconRenderer != null && iconRenderer.sprite != null && iconRenderer.enabled != visible) iconRenderer.enabled = visible;
+        PickupVisual.SetGlowVisible(glow, visible);
     }
 }

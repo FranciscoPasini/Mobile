@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[System.Serializable]
 public class Weapon_Shotgun : Base_Weapon
 {
     [SerializeField, Min(1)] private int pelletCount = 6;

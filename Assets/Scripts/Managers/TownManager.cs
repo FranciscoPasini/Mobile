@@ -23,6 +23,8 @@ public class TownManager : MonoBehaviour
     [Tooltip("Ceiling on how many enemies a single wave may request.")]
     [SerializeField] private int maxEnemiesPerWave = 10;
     [SerializeField] private GameObject gameOverScreen;
+    [Tooltip("Played when a new wave starts. Leave empty for no sound.")]
+    [SerializeField] private AudioClip waveAdvanceSound;
 
     //ENEMY POOL
     [Header("Enemy Pool")]
@@ -122,6 +124,11 @@ public class TownManager : MonoBehaviour
 
         CurrentWave++;
         OnWaveChanged?.Invoke();
+        if (waveAdvanceSound != null)
+        {
+            Vector3 origin = townBuilding != null ? townBuilding.transform.position : transform.position;
+            AudioSource.PlayClipAtPoint(waveAdvanceSound, origin);
+        }
 
         int requested = Mathf.Min(enemiesPerWave + (CurrentWave - 1) * extraEnemiesPerWave, maxEnemiesPerWave);
         int spawned = enemyPool.SpawnMany(requested);

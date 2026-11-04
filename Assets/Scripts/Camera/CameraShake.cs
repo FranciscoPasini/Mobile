@@ -34,9 +34,9 @@ public class CameraShake : MonoBehaviour
     [SerializeField] private bool flashEnabled = true;
     [SerializeField] private Color flashColor = new Color(1f, 0f, 0f, 1f);
     [Tooltip("Vignette strength at the peak of the flash.")]
-    [Range(0f, 1f)] [SerializeField] private float flashIntensity = 0.35f;
+    [Range(0f, 1f)] [SerializeField] private float flashIntensity = 0.15f;
     [Range(0.01f, 1f)] [SerializeField] private float flashSmoothness = 0.6f;
-    [SerializeField] private float flashDuration = 0.35f;
+    [SerializeField] private float flashDuration = 0.22f;
     [Tooltip("The vignette needs post-processing on this camera. Turn off if you manage that yourself.")]
     [SerializeField] private bool enablePostProcessingOnCamera = true;
 
@@ -181,7 +181,8 @@ public class CameraShake : MonoBehaviour
     {
         if (enablePostProcessingOnCamera)
         {
-            GetComponent<Camera>().GetUniversalAdditionalCameraData().renderPostProcessing = true;
+            Camera cam = GetComponent<Camera>();
+            if (cam != null) cam.GetUniversalAdditionalCameraData().renderPostProcessing = true;
         }
 
         flashProfile = ScriptableObject.CreateInstance<VolumeProfile>();

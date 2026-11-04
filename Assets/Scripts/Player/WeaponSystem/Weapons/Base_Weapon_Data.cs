@@ -18,6 +18,8 @@ public class Base_Weapon_Data : ScriptableObject
     public float weaponBaseBulletSpeed;
     public int weaponBaseAmmo;
     public AudioClip weaponFireSound;
+    [Tooltip("Played when the player picks this weapon up. Leave empty for no sound.")]
+    public AudioClip pickupSound;
     public Base_Bullet_Data bulletData;
 
     [Header("Level Scaling")]

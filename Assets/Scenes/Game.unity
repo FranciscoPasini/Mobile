@@ -3938,9 +3938,9 @@ MonoBehaviour:
   ignoreTimeScale: 1
   flashEnabled: 1
   flashColor: {r: 1, g: 0, b: 0, a: 1}
-  flashIntensity: 0.35
+  flashIntensity: 0.15
   flashSmoothness: 0.6
-  flashDuration: 0.35
+  flashDuration: 0.22
   enablePostProcessingOnCamera: 1
 --- !u!1001 &1097292856
 PrefabInstance:
@@ -18311,10 +18311,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DamageVignette
   townManager: {fileID: 1850168166}
   color: {r: 1, g: 0.1, b: 0.1, a: 1}
-  hitAlpha: 0.6
-  fadeSpeed: 2.5
+  hitAlpha: 0.22
+  fadeSpeed: 4
   lowHealthThreshold: 0.3
-  lowHealthAlpha: 0.25
+  lowHealthAlpha: 0.1
 --- !u!1 &9068921205226743584
 GameObject:
   m_ObjectHideFlags: 0

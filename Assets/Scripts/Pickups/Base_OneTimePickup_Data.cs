@@ -7,6 +7,8 @@ public class Base_OneTimePickup_Data : ScriptableObject
     public GameObject pickupPrefab;
     public string pickupName;
     public Sprite pickupIcon;
+    [Tooltip("Played when the player collects this pickup. Leave empty for no sound.")]
+    public AudioClip pickupSound;
 
     [Header("Lifetime")]
     [Tooltip("Seconds on the ground before an uncollected pickup vanishes with no effect.")]

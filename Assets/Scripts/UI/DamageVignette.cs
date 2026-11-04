@@ -10,11 +10,11 @@ public class DamageVignette : MonoBehaviour
 {
     [SerializeField] private TownManager townManager;
     [SerializeField] private Color color = new Color(1f, 0.1f, 0.1f, 1f);
-    [SerializeField] private float hitAlpha = 0.6f;
-    [SerializeField] private float fadeSpeed = 2.5f;
+    [SerializeField] private float hitAlpha = 0.22f;
+    [SerializeField] private float fadeSpeed = 4f;
     [Range(0f, 1f)]
     [SerializeField] private float lowHealthThreshold = 0.3f;
-    [SerializeField] private float lowHealthAlpha = 0.25f;
+    [SerializeField] private float lowHealthAlpha = 0.1f;
 
     private Image image;
     private float alpha;
@@ -26,8 +26,16 @@ public class DamageVignette : MonoBehaviour
         if (townManager == null) townManager = FindFirstObjectByType<TownManager>();
     }
 
-    private void OnEnable() => townManager.OnTownDamageTaken += OnHit;
-    private void OnDisable() => townManager.OnTownDamageTaken -= OnHit;
+    private void OnEnable()
+    {
+        if (townManager == null) townManager = FindFirstObjectByType<TownManager>();
+        if (townManager != null) townManager.OnTownDamageTaken += OnHit;
+    }
+
+    private void OnDisable()
+    {
+        if (townManager != null) townManager.OnTownDamageTaken -= OnHit;
+    }
 
     private void OnHit(float damage) => alpha = hitAlpha;
 
@@ -36,6 +44,8 @@ public class DamageVignette : MonoBehaviour
         alpha = Mathf.MoveTowards(alpha, 0f, fadeSpeed * Time.unscaledDeltaTime);
 
         float floor = 0f;
+        if (townManager == null) return;
+
         int max = townManager.GetTownMaxHealth();
         if (max > 0 && (float)townManager.GetTownHealth() / max <= lowHealthThreshold)
         {

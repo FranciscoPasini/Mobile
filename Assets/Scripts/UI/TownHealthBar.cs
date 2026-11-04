@@ -53,12 +53,17 @@ public class TownHealthBar : MonoBehaviour
 
     private void OnEnable()
     {
+        if (townManager == null) townManager = FindFirstObjectByType<TownManager>();
+        if (townManager == null) return;
+
         townManager.OnTownHealthChanged += Refresh;
         townManager.OnTownDamageTaken += OnHit;
     }
 
     private void OnDisable()
     {
+        if (townManager == null) return;
+
         townManager.OnTownHealthChanged -= Refresh;
         townManager.OnTownDamageTaken -= OnHit;
     }
@@ -72,6 +77,8 @@ public class TownHealthBar : MonoBehaviour
 
     private void Refresh()
     {
+        if (townManager == null) return;
+
         lastHealth = townManager.GetTownHealth();
         lastMaxHealth = townManager.GetTownMaxHealth();
 
@@ -97,7 +104,7 @@ public class TownHealthBar : MonoBehaviour
         float dt = Time.unscaledDeltaTime;
 
         // Max health can change without an event (upgrades), so check every frame.
-        if (townManager.GetTownHealth() != lastHealth || townManager.GetTownMaxHealth() != lastMaxHealth) Refresh();
+        if (townManager != null && (townManager.GetTownHealth() != lastHealth || townManager.GetTownMaxHealth() != lastMaxHealth)) Refresh();
 
         shownPercent = Mathf.Lerp(shownPercent, targetPercent, 1f - Mathf.Exp(-fillSpeed * dt));
 

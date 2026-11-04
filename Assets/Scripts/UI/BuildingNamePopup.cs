@@ -33,7 +33,7 @@ public class BuildingNamePopup : MonoBehaviour
     {
         if (group == null) group = GetComponent<CanvasGroup>();
         baseScale = transform.localScale;
-        group.alpha = 0f;
+        if (group != null) group.alpha = 0f;
     }
 
     private void OnEnable()
@@ -101,6 +101,8 @@ public class BuildingNamePopup : MonoBehaviour
 
     private void Update()
     {
+        if (group == null || nameText == null) return;
+
         float dt = Time.unscaledDeltaTime;
         bool celebrating = celebrateTime < celebrateDuration;
 

@@ -33,7 +33,10 @@ public abstract class Base_OneTimePickup : MonoBehaviour, IPoolable
     [Header("Visuals")]
     [SerializeField] private Renderer pickupRenderer;
     [SerializeField] private SpriteRenderer iconRenderer;
-    [SerializeField] private float spinSpeed = 140f;
+    [SerializeField] private float spinSpeed = 50f;
+    [SerializeField] private float hoverHeight = 0.18f;
+    [SerializeField] private float hoverSpeed = 2.2f;
+    [SerializeField] private Color glowColor = new Color(1f, 0.85f, 0.35f);
 
     private enum State { Dropping, Resting, Collecting }
 
@@ -54,6 +57,9 @@ public abstract class Base_OneTimePickup : MonoBehaviour, IPoolable
     private float blinkPhase;
     private float baseMagnetRadius;
     private Vector3 baseMagnetSize;
+    private Light glow;
+    private Vector3 restPosition;
+    private float hoverTime;
 
     public bool IsCollecting => state == State.Collecting;
     public Base_OneTimePickup_Data PickupData => pickupData;
@@ -85,6 +91,7 @@ public abstract class Base_OneTimePickup : MonoBehaviour, IPoolable
         if (iconRenderer == null) iconRenderer = GetComponentInChildren<SpriteRenderer>();
 
         CacheMagnetSize();
+        glow = PickupVisual.EnsureGlow(transform, glowColor);
         ApplyDataSettings();
     }
 
@@ -184,6 +191,14 @@ public abstract class Base_OneTimePickup : MonoBehaviour, IPoolable
             iconRenderer.sprite = pickupData.pickupIcon;
             iconRenderer.enabled = pickupData.pickupIcon != null;
         }
+
+        if (glow != null)
+        {
+            if (this is OneTimePickup_TownHeal) glow.color = new Color(0.3f, 1f, 0.4f);
+            else if (this is OneTimePickup_Shockwave) glow.color = new Color(1f, 0.95f, 0.7f);
+            else if (this is OneTimePickup_Experience) glow.color = new Color(0.4f, 0.75f, 1f);
+            else glow.color = glowColor;
+        }
     }
 
     private void Update()
@@ -201,12 +216,15 @@ public abstract class Base_OneTimePickup : MonoBehaviour, IPoolable
             if (settled || dropTimer >= maxDropTime)
             {
                 FreezeBody();
+                restPosition = transform.position;
+                hoverTime = 0f;
                 state = State.Resting;
             }
         }
         else
         {
-            if (spinSpeed != 0f) transform.Rotate(0f, spinSpeed * Time.deltaTime, 0f, Space.World);
+            hoverTime += Time.deltaTime;
+            PickupVisual.HoverSpin(transform, restPosition, spinSpeed, hoverHeight, hoverSpeed, hoverTime);
             if (IsPlayerInMagnet())
             {
                 Collect();
@@ -262,6 +280,10 @@ public abstract class Base_OneTimePickup : MonoBehaviour, IPoolable
     private void Award()
     {
         ApplyEffect();
+        if (pickupData != null && pickupData.pickupSound != null)
+        {
+            AudioSource.PlayClipAtPoint(pickupData.pickupSound, transform.position);
+        }
         OnCollected?.Invoke(this);
         Despawn();
     }
@@ -304,5 +326,6 @@ public abstract class Base_OneTimePickup : MonoBehaviour, IPoolable
     {
         if (pickupRenderer != null && pickupRenderer.enabled != visible) pickupRenderer.enabled = visible;
         if (iconRenderer != null && iconRenderer.sprite != null && iconRenderer.enabled != visible) iconRenderer.enabled = visible;
+        PickupVisual.SetGlowVisible(glow, visible);
     }
 }

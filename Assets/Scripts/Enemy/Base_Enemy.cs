@@ -49,6 +49,17 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
     private Vector3 lastTargetPosition;
     private float stunTimer;
 
+    [Header("Hit FX")]
+    [SerializeField] private Color hitFlashColor = Color.white;
+    [SerializeField] private float hitFlashTime = 0.12f;
+
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
+    private MaterialPropertyBlock hitBlock;
+    private Renderer[] renderers;
+    private Color[] originalColors;
+    private float hitFlashTimer;
+
     [SerializeField] private NavMeshAgent agent;
 
     [Header("Loot")]
@@ -120,6 +131,9 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
         Physics.IgnoreLayerCollision(gameObject.layer, gameObject.layer, true);
 
+        hitBlock = new MaterialPropertyBlock();
+        CacheRenderers();
+
         if (target == null)
         {
             townBuilding = FindFirstObjectByType<Building_Town>();
@@ -141,6 +155,8 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
 
     private void Update()
     {
+        UpdateHitFlash();
+
         if (target == null) 
         {
             Debug.LogError($"{gameObject.name}: Target is null", this);
@@ -250,7 +266,10 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         if (currentHealth <= 0)
         {
             Die();
+            return;
         }
+
+        FlashHit();
     }
 
     public void Heal(float amount)
@@ -292,6 +311,7 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
             playerStats.AddExperience(experienceReward);
         }
 
+        SimpleFx.DeathBurst(transform.position);
         Despawn();
     }
 
@@ -300,6 +320,7 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         isDead = false;
         currentHealth = maxHealth;
         ClearStun();
+        ClearHitFlash();
     }
 
     /// <summary>
@@ -363,6 +384,65 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
             agent.isStopped = false;
+        }
+    }
+
+    private void CacheRenderers()
+    {
+        renderers = GetComponentsInChildren<Renderer>(true);
+        originalColors = new Color[renderers.Length];
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            originalColors[i] = ReadAlbedo(renderers[i]);
+        }
+    }
+
+    private static Color ReadAlbedo(Renderer renderer)
+    {
+        if (renderer == null || renderer.sharedMaterial == null) return Color.white;
+
+        Material material = renderer.sharedMaterial;
+        if (material.HasProperty(BaseColorId)) return material.GetColor(BaseColorId);
+        if (material.HasProperty(ColorId)) return material.GetColor(ColorId);
+        return Color.white;
+    }
+
+    private void FlashHit()
+    {
+        hitFlashTimer = hitFlashTime;
+        // Prefabs saved before this field existed serialize it as black. Don't use that.
+        Color flash = hitFlashColor.maxColorComponent > 0.2f ? hitFlashColor : Color.white;
+        ApplyHitTint(flash, true);
+    }
+
+    private void UpdateHitFlash()
+    {
+        if (hitFlashTimer <= 0f) return;
+
+        hitFlashTimer -= Time.deltaTime;
+        if (hitFlashTimer <= 0f) ClearHitFlash();
+    }
+
+    private void ClearHitFlash()
+    {
+        hitFlashTimer = 0f;
+        ApplyHitTint(Color.white, false);
+    }
+
+    private void ApplyHitTint(Color flash, bool flashing)
+    {
+        if (renderers == null || originalColors == null || hitBlock == null) return;
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Renderer renderer = renderers[i];
+            if (renderer == null || renderer is ParticleSystemRenderer || renderer is TrailRenderer) continue;
+
+            Color color = flashing ? Color.Lerp(originalColors[i], flash, 0.85f) : originalColors[i];
+            hitBlock.Clear();
+            hitBlock.SetColor(BaseColorId, color);
+            hitBlock.SetColor(ColorId, color);
+            renderer.SetPropertyBlock(hitBlock);
         }
     }
 

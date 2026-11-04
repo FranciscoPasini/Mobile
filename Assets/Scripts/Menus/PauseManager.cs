@@ -3,7 +3,6 @@ using UnityEngine;
 public class PauseManager : MonoBehaviour
 {
     [SerializeField] private GameObject pauseMenu;
-    private bool isPaused = false;
     [SerializeField] private string mainmenu;
     [SerializeField] private GameObject settings;
 
@@ -11,13 +10,11 @@ public class PauseManager : MonoBehaviour
     {
         pauseMenu.SetActive(false);
         Time.timeScale = 1f;
-        isPaused = false;
     }
     public void Pause()
     {
         pauseMenu.SetActive(true);
         Time.timeScale = 0f;
-        isPaused = true;
     }
 
     public void SettingsMenu()

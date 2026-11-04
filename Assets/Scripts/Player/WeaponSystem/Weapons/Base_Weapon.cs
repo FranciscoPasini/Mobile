@@ -220,6 +220,7 @@ public class Base_Weapon
         {
             ShootTimer = 0;
             FireEffect();
+            MuzzleFlashEmitter.PlayAt(GetFireOrigin(), GetAimDirection());
 
             if (!isDefaultWeapon)
             {

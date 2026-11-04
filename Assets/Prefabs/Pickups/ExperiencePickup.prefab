@@ -223,4 +223,4 @@ MonoBehaviour:
   maxFlyTime: 3
   pickupRenderer: {fileID: 7144103912285397867}
   iconRenderer: {fileID: 0}
-  spinSpeed: 140
+  spinSpeed: 50

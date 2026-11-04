@@ -109,6 +109,11 @@ public class PlayerWeaponSystem : MonoBehaviour
         pickedUpWeapon.onWeaponOutOfAmmo += HandlePickedUpWeaponOutOfAmmo;
         OnActiveWeaponChanged?.Invoke();
         OnWeaponPickedUp?.Invoke(pickedUpWeapon);
+
+        if (pickedUpWeapon.weaponData != null && pickedUpWeapon.weaponData.pickupSound != null)
+        {
+            AudioSource.PlayClipAtPoint(pickedUpWeapon.weaponData.pickupSound, firePoint != null ? firePoint.position : transform.position);
+        }
     }
 
     private void HandlePickedUpWeaponOutOfAmmo()

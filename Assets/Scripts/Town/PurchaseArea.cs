@@ -241,6 +241,7 @@ public class PurchaseArea : MonoBehaviour
         ResetAfterPurchase();
         ActivateUnlockAreas();
         ApplyPurchaseScale();
+        SimpleFx.BuyBurst(transform.position);
         OnPurchased?.Invoke();
     }
 
@@ -277,6 +278,7 @@ public class PurchaseArea : MonoBehaviour
     private void HandleUpgraded(int newLevel)
     {
         ResetAfterPurchase();
+        SimpleFx.BuyBurst(transform.position);
         OnUpgraded?.Invoke(newLevel);
     }
 

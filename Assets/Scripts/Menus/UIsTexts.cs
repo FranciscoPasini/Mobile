@@ -24,7 +24,7 @@ public class UIsTexts : MonoBehaviour
         if (townManager == null) townManager = FindFirstObjectByType<TownManager>();
 
         TownManager.OnCoinsChanged += OnCoinsChanged;
-        townManager.OnWaveChanged += OnWaveChanged;
+        if (townManager != null) townManager.OnWaveChanged += OnWaveChanged;
 
         if (playerWeaponSystem == null)
         {
@@ -41,7 +41,7 @@ public class UIsTexts : MonoBehaviour
     void OnDisable()
     {
         TownManager.OnCoinsChanged -= OnCoinsChanged;
-        townManager.OnWaveChanged -= OnWaveChanged;
+        if (townManager != null) townManager.OnWaveChanged -= OnWaveChanged;
 
         if (playerWeaponSystem != null)
         {
@@ -53,8 +53,8 @@ public class UIsTexts : MonoBehaviour
     void Start()
     {
         lastCoins = TownManager.Coins;
-        coinsText.text = lastCoins.ToString();
-        waveText.text = townManager.CurrentWave.ToString();
+        if (coinsText != null) coinsText.text = lastCoins.ToString();
+        if (waveText != null && townManager != null) waveText.text = townManager.CurrentWave.ToString();
         RefreshAmmo();
     }
 

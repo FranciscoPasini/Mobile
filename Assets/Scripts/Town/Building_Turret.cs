@@ -29,10 +29,13 @@ public class Building_Turret : Base_PurchaseableBuilding
     private float nextScanTime;
     private Collider currentTarget;
     private readonly Collider[] scanResults = new Collider[32];
+    private Vector3 headRestLocalPos;
+    private float recoil;
 
     protected override void Awake()
     {
         if (firePoint == null) firePoint = transform;
+        if (turretHead != null) headRestLocalPos = turretHead.localPosition;
 
         if (turretData == null)
         {
@@ -104,6 +107,7 @@ public class Building_Turret : Base_PurchaseableBuilding
         }
 
         fireTimer = Mathf.Min(fireTimer + Time.deltaTime, fireRate);
+        UpdateRecoil();
 
         if (currentTarget == null) return;
 
@@ -123,6 +127,8 @@ public class Building_Turret : Base_PurchaseableBuilding
 
         bulletData.Spawn(firePoint.position, aimPoint, currentTarget.gameObject, bulletSpeed, bulletDamage);
         if (fireSound != null) AudioSource.PlayClipAtPoint(fireSound, firePoint.position);
+        MuzzleFlashEmitter.PlayAt(firePoint.position, aimPoint - firePoint.position);
+        recoil = 1f;
     }
 
     private Collider FindClosestTarget()
@@ -173,6 +179,14 @@ public class Building_Turret : Base_PurchaseableBuilding
             turretHead.rotation,
             Quaternion.LookRotation(direction),
             turnSpeed * Time.deltaTime);
+    }
+
+    private void UpdateRecoil()
+    {
+        if (turretHead == null) return;
+
+        recoil = Mathf.MoveTowards(recoil, 0f, Time.deltaTime * 8f);
+        turretHead.localPosition = headRestLocalPos - Vector3.forward * (recoil * 0.12f);
     }
 
     #endregion
