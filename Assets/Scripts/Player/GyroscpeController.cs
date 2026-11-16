@@ -7,17 +7,21 @@ public class GyroscpeController : PlayerController
     [Header("Gyroscope")]
     [SerializeField] private float smoothing = 5f;
     [Tooltip("Grados de inclinación que equivalen al joystick a fondo.")]
-    [SerializeField] private float tiltForFullSpeed = 30f;
+    [SerializeField] private float tiltForFullSpeed = 12f;
     [Tooltip("Inclinación mínima (grados) antes de mover al jugador. Evita el drift.")]
-    [SerializeField] private float tiltDeadZone = 2f;
+    [SerializeField] private float tiltDeadZone = 1.5f;
     [Tooltip("Invertir ejes si el movimiento se siente al revés.")]
     [SerializeField] private bool invertX;
     [SerializeField] private bool invertY;
+    [Tooltip("Seconds of holding a finger on the screen to recalibrate the current tilt as center.")]
+    [SerializeField] private float holdToCalibrate = 2f;
 
     private Quaternion smoothedAttitude;
     private Quaternion baseLineAttitude;
     private bool initialized;
     private bool needsCalibration = true;
+    private float holdTimer;
+    private bool holdUsed;
 
     // Anulamos el input táctil: este controlador solo usa sensores.
     protected override void EnableTouchControls() { }
@@ -60,7 +64,31 @@ public class GyroscpeController : PlayerController
 
     protected override void Update()
     {
+        UpdateHoldToCalibrate();
         MovePlayer(ReadGyroInput());
+    }
+
+    private void UpdateHoldToCalibrate()
+    {
+        // Pointer covers touch on device and the mouse in the editor.
+        bool held = Pointer.current != null && Pointer.current.press.isPressed && Time.timeScale > 0f;
+        if (!held)
+        {
+            holdTimer = 0f;
+            holdUsed = false;
+            return;
+        }
+
+        if (holdUsed) return;
+
+        holdTimer += Time.unscaledDeltaTime;
+        if (holdTimer < holdToCalibrate) return;
+
+        holdUsed = true;
+        Calibrate();
+#if UNITY_ANDROID || UNITY_IOS
+        Handheld.Vibrate();
+#endif
     }
 
     private Vector2 ReadGyroInput()
@@ -83,6 +111,7 @@ public class GyroscpeController : PlayerController
         if (needsCalibration)
         {
             // La orientación actual se toma como el "centro" (celular pantalla arriba, nivelado)
+            smoothedAttitude = currentAttitude;
             baseLineAttitude = smoothedAttitude;
             needsCalibration = false;
         }

@@ -112,7 +112,7 @@ public class PlayerWeaponSystem : MonoBehaviour
 
         if (pickedUpWeapon.weaponData != null && pickedUpWeapon.weaponData.pickupSound != null)
         {
-            AudioSource.PlayClipAtPoint(pickedUpWeapon.weaponData.pickupSound, firePoint != null ? firePoint.position : transform.position);
+            GameAudio.PlaySfx(pickedUpWeapon.weaponData.pickupSound, firePoint != null ? firePoint.position : transform.position);
         }
     }
 

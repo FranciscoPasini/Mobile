@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OneTimePickup_Shockwave_Data
   pickupPrefab: {fileID: 3847293650182736401, guid: f48bc5a3296e5473cbd425c1b2d3e5f6, type: 3}
   pickupName: Bomb
-  pickupIcon: {fileID: 0}
+  pickupIcon: {fileID: 21300000, guid: c08921f6163abee42b20f243eb0b904f, type: 3}
   pickupSound: {fileID: 8300000, guid: 14f8c7be4ce6b1f4f99088faa004403a, type: 3}
   lifetime: 30
   blinkWarningTime: 5

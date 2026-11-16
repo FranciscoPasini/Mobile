@@ -52,6 +52,8 @@ public class PurchaseArea : MonoBehaviour
     /// <summary>Fired when the player steps into / out of any purchase area. Used by the on-screen name popup.</summary>
     public static event System.Action<PurchaseArea> OnPlayerEntered;
     public static event System.Action<PurchaseArea> OnPlayerExited;
+    /// <summary>Fired when any area's building is upgraded (not on the first purchase).</summary>
+    public static event System.Action<PurchaseArea> OnAnyUpgraded;
 
     private bool playerInside;
 
@@ -294,6 +296,7 @@ public class PurchaseArea : MonoBehaviour
         SimpleFx.BuyBurst(transform.position);
         PlaySound(upgradeSound != null ? upgradeSound : purchaseSound);
         OnUpgraded?.Invoke(newLevel);
+        OnAnyUpgraded?.Invoke(this);
     }
 
     private void ResetAfterPurchase()
@@ -404,6 +407,7 @@ public static class FlatAudio
             source = go.AddComponent<AudioSource>();
             source.spatialBlend = 0f;
             source.playOnAwake = false;
+            source.outputAudioMixerGroup = GameAudio.SfxGroup;
         }
 
         source.PlayOneShot(clip, volume);

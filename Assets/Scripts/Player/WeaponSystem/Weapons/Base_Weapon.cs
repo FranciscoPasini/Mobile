@@ -198,7 +198,7 @@ public class Base_Weapon
     {
         if (weaponData != null && weaponData.weaponFireSound != null)
         {
-            AudioSource.PlayClipAtPoint(weaponData.weaponFireSound, origin);
+            GameAudio.PlaySfx(weaponData.weaponFireSound, origin);
         }
     }
 

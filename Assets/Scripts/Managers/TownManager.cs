@@ -72,6 +72,7 @@ public class TownManager : MonoBehaviour
         //SET THE CURRENT WAVE TO 0
         CurrentWave = 0;
         currentWaveTime = 0f;
+        RunStats.Begin();
 
         //FIND THE TOWN IF NOT SET
         if (townBuilding == null) 
@@ -127,7 +128,7 @@ public class TownManager : MonoBehaviour
         if (waveAdvanceSound != null)
         {
             Vector3 origin = townBuilding != null ? townBuilding.transform.position : transform.position;
-            AudioSource.PlayClipAtPoint(waveAdvanceSound, origin);
+            GameAudio.PlaySfx(waveAdvanceSound, origin);
         }
 
         int requested = Mathf.Min(enemiesPerWave + (CurrentWave - 1) * extraEnemiesPerWave, maxEnemiesPerWave);
@@ -164,6 +165,7 @@ public class TownManager : MonoBehaviour
 
         int granted = Mathf.Max(1, Mathf.RoundToInt(amount * Mathf.Max(1f, multiplier)));
         Coins += granted;
+        RunStats.AddCoins(granted);
         OnCoinsChanged?.Invoke(Coins);
     }
 
@@ -204,6 +206,9 @@ public class TownManager : MonoBehaviour
     {
         gameOver = true;
         Time.timeScale = 0f;
+
+        int level = playerStats != null ? playerStats.GetCurrentPlayerLevel() : 1;
+        HighscoreService.SubmitRun(RunStats.Finish(CurrentWave, level));
 
         if (gameOverScreen != null) gameOverScreen.SetActive(true);
         else Debug.LogError("Town Manager: no Game Over Screen assigned, nothing to show on defeat.", this);

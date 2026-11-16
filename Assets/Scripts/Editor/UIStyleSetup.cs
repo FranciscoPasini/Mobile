@@ -469,6 +469,317 @@ public static class UIStyleSetup
         Finish(canvas, undoGroup, "Onboarding tutorial added.");
     }
 
+    [MenuItem("Tools/Game/Build Settings Panel")]
+    public static void BuildSettingsPanel()
+    {
+        Canvas canvas = FindRootCanvas();
+        GameObject panel = null;
+        foreach (RectTransform rect in Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (rect.name == "SettingsPanel" && rect.gameObject.scene == SceneManager.GetActiveScene()) panel = rect.gameObject;
+        }
+        if (canvas == null || panel == null)
+        {
+            Debug.LogError("Open a scene with a 'SettingsPanel' first (MainMenu or Game).");
+            return;
+        }
+
+        LoadAssets();
+        Undo.SetCurrentGroupName("Build Settings Panel");
+        int undoGroup = Undo.GetCurrentGroup();
+
+        CreateSettingsOptions(panel.transform);
+
+        Finish(canvas, undoGroup, "Settings panel built.");
+    }
+
+    private static void CreateSettingsOptions(Transform panel)
+    {
+        RemoveExisting(panel, "Options");
+
+        // Keeps the title and the back/close button (and its OnClick), hides the old controls block.
+        TextMeshProUGUI title = null;
+        Button back = null;
+        foreach (Transform child in panel)
+        {
+            var text = child.GetComponent<TextMeshProUGUI>();
+            var button = child.GetComponent<Button>();
+            if (title == null && text != null && text.text.Trim().ToUpper() == "SETTINGS") title = text;
+            else if (back == null && button != null) back = button;
+            else
+            {
+                Undo.RecordObject(child.gameObject, "Hide old settings");
+                child.gameObject.SetActive(false);
+            }
+        }
+
+        if (title != null)
+        {
+            Undo.RecordObject(title.rectTransform, "Move title");
+            AnchorTopBand(title.rectTransform, 40f, 130f);
+        }
+
+        if (back != null)
+        {
+            var rect = (RectTransform)back.transform;
+            Undo.RecordObject(rect, "Move back button");
+            SetAnchoredCenter(rect, new Vector2(0.5f, 0f), new Vector2(0f, 110f), new Vector2(500f, 140f));
+        }
+
+        RectTransform options = CreateRect("Options", panel);
+        Stretch(options, 50f, 50f, 210f, 190f);
+        SetupColumn(options, 20f);
+
+        SetPreferredHeight(CreateText("Controls Label", options, "CONTROLS", 40f, SoftWhite, true).gameObject, 50f);
+
+        RectTransform controls = CreateRect("Controls", options);
+        SetPreferredHeight(controls.gameObject, 160f);
+        HorizontalLayoutGroup row = controls.gameObject.AddComponent<HorizontalLayoutGroup>();
+        row.spacing = 20f;
+        row.childControlWidth = row.childControlHeight = true;
+        row.childForceExpandWidth = row.childForceExpandHeight = true;
+        Button touch = CreateSettingsButton("Touch", controls, "TOUCH", 0f);
+        Button tilt = CreateSettingsButton("Tilt", controls, "TILT", 0f);
+
+        SetPreferredHeight(CreateText("Audio Label", options, "AUDIO", 40f, SoftWhite, true).gameObject, 50f);
+
+        Button music = CreateSettingsButton("Music", options, "MUSIC", 120f);
+        TextMeshProUGUI musicState = CreateToggleState(music);
+        Button sfx = CreateSettingsButton("Sfx", options, "SFX", 120f);
+        TextMeshProUGUI sfxState = CreateToggleState(sfx);
+
+        var menu = GetOrAdd<SettingsMenu>(panel.gameObject);
+        var so = new SerializedObject(menu);
+        so.FindProperty("touchButton").objectReferenceValue = touch;
+        so.FindProperty("tiltButton").objectReferenceValue = tilt;
+        so.FindProperty("musicButton").objectReferenceValue = music;
+        so.FindProperty("musicState").objectReferenceValue = musicState;
+        so.FindProperty("sfxButton").objectReferenceValue = sfx;
+        so.FindProperty("sfxState").objectReferenceValue = sfxState;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    private static Button CreateSettingsButton(string name, Transform parent, string label, float height)
+    {
+        Image image = CreateImage(name, parent, rounded, PanelLight);
+        image.raycastTarget = true;
+        Button button = image.gameObject.AddComponent<Button>();
+        button.targetGraphic = image;
+        CreateText("Text", image.transform, label, 44f, Color.white, true);
+        StyleButton(button, PanelLight, label, 44f, height);
+        return button;
+    }
+
+    /// <summary>Label on the left, ON/OFF on the right.</summary>
+    private static TextMeshProUGUI CreateToggleState(Button button)
+    {
+        TextMeshProUGUI label = button.transform.Find("Text").GetComponent<TextMeshProUGUI>();
+        label.alignment = TextAlignmentOptions.MidlineLeft;
+        Stretch(label.rectTransform, 40f, 40f, 0f, 0f);
+
+        TextMeshProUGUI state = CreateText("State", button.transform, "ON", 44f, Color.white, true);
+        state.alignment = TextAlignmentOptions.MidlineRight;
+        Stretch(state.rectTransform, 40f, 40f, 0f, 0f);
+        return state;
+    }
+
+    [MenuItem("Tools/Game/Add Leaderboard")]
+    public static void AddLeaderboard()
+    {
+        Canvas canvas = FindRootCanvas();
+        Transform play = canvas != null ? FindChild(canvas.transform, "ButtonPlay") : null;
+        if (play == null)
+        {
+            Debug.LogError("Open the MainMenu scene first (needs the Play button).");
+            return;
+        }
+
+        LoadAssets();
+        Undo.SetCurrentGroupName("Add Leaderboard");
+        int undoGroup = Undo.GetCurrentGroup();
+
+        var safeArea = Object.FindFirstObjectByType<SafeArea>(FindObjectsInactive.Include);
+        LeaderboardPanel panel = CreateLeaderboardPanel(safeArea != null ? safeArea.transform : canvas.transform);
+
+        // Button between Play and Quit. The column grows to fit it.
+        RectTransform column = (RectTransform)play.parent;
+        RemoveExisting(column, "ButtonLeaderboard");
+        Button open = CreateSettingsButton("ButtonLeaderboard", column, "LEADERBOARD", 140f);
+        StyleButton(open, PanelLight, "LEADERBOARD", 56f, 140f);
+        open.transform.SetSiblingIndex(play.GetSiblingIndex() + 1);
+        UnityEventTools.AddBoolPersistentListener(open.onClick, panel.gameObject.SetActive, true);
+        Undo.RecordObject(column, "Grow menu column");
+        column.sizeDelta = new Vector2(column.sizeDelta.x, 580f);
+
+        Finish(canvas, undoGroup, "Leaderboard added.");
+    }
+
+    private static LeaderboardPanel CreateLeaderboardPanel(Transform parent)
+    {
+        RemoveExisting(parent, "LeaderboardPanel");
+
+        RectTransform root = CreateRect("LeaderboardPanel", parent);
+        SetAnchoredCenter(root, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(980f, 1560f));
+        StyleCard(root.gameObject);
+        root.GetComponent<Image>().raycastTarget = true;
+
+        TextMeshProUGUI title = CreateText("Title", root, "LEADERBOARD", 80f, Gold, true);
+        AnchorTopBand(title.rectTransform, 40f, 120f);
+
+        // Scrolling list.
+        RectTransform list = CreateRect("List", root);
+        Stretch(list, 30f, 30f, 200f, 180f);
+        Image listImage = list.gameObject.AddComponent<Image>();
+        listImage.color = Color.clear;
+        list.gameObject.AddComponent<RectMask2D>();
+
+        RectTransform content = CreateRect("Content", list);
+        content.anchorMin = new Vector2(0f, 1f);
+        content.anchorMax = new Vector2(1f, 1f);
+        content.pivot = new Vector2(0.5f, 1f);
+        content.offsetMin = content.offsetMax = Vector2.zero;
+        VerticalLayoutGroup layout = SetupColumn(content, 14f);
+        layout.childAlignment = TextAnchor.UpperCenter;
+        ContentSizeFitter fitter = content.gameObject.AddComponent<ContentSizeFitter>();
+        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        ScrollRect scroll = list.gameObject.AddComponent<ScrollRect>();
+        scroll.content = content;
+        scroll.horizontal = false;
+        scroll.movementType = ScrollRect.MovementType.Elastic;
+        scroll.scrollSensitivity = 30f;
+
+        // Row: rank on the left, name and wave on top, the other stats underneath.
+        Image row = CreateImage("Row", content, rounded, PanelLight);
+        row.type = Image.Type.Sliced;
+        row.pixelsPerUnitMultiplier = 0.5f;
+        SetPreferredHeight(row.gameObject, 130f);
+
+        TextMeshProUGUI rank = CreateText("Rank", row.transform, "#1", 48f, Gold, true);
+        rank.rectTransform.anchorMin = Vector2.zero;
+        rank.rectTransform.anchorMax = new Vector2(0f, 1f);
+        rank.rectTransform.pivot = new Vector2(0f, 0.5f);
+        rank.rectTransform.offsetMin = new Vector2(10f, 0f);
+        rank.rectTransform.offsetMax = new Vector2(120f, 0f);
+
+        TextMeshProUGUI name = CreateText("Name", row.transform, "Camper0000", 38f, Color.white, true);
+        name.alignment = TextAlignmentOptions.MidlineLeft;
+        Stretch(name.rectTransform, 130f, 230f, 62f, 8f);
+
+        TextMeshProUGUI wave = CreateText("Wave", row.transform, "WAVE 1", 38f, Gold, true);
+        wave.alignment = TextAlignmentOptions.MidlineRight;
+        Stretch(wave.rectTransform, 600f, 24f, 62f, 8f);
+
+        TextMeshProUGUI details = CreateText("Details", row.transform, "0:00", 26f, SoftWhite, false);
+        details.alignment = TextAlignmentOptions.MidlineLeft;
+        Stretch(details.rectTransform, 130f, 24f, 10f, 70f);
+
+        row.gameObject.SetActive(false);
+
+        TextMeshProUGUI status = CreateText("Status", root, "LOADING...", 48f, SoftWhite, true);
+        Stretch(status.rectTransform, 30f, 30f, 200f, 180f);
+
+        Button close = CreateSettingsButton("Close", root, "CLOSE", 0f);
+        StyleButton(close, Accent, "CLOSE", 56f, 0f);
+        SetAnchoredCenter((RectTransform)close.transform, new Vector2(0.5f, 0f), new Vector2(0f, 100f), new Vector2(500f, 130f));
+
+        LeaderboardPanel panel = root.gameObject.AddComponent<LeaderboardPanel>();
+        var so = new SerializedObject(panel);
+        so.FindProperty("content").objectReferenceValue = content;
+        so.FindProperty("rowTemplate").objectReferenceValue = row.gameObject;
+        so.FindProperty("statusText").objectReferenceValue = status;
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        UnityEventTools.AddPersistentListener(close.onClick, panel.Close);
+        root.gameObject.AddComponent<UIPopIn>();
+        root.gameObject.SetActive(false);
+        return panel;
+    }
+
+    [MenuItem("Tools/Game/Add Ability Button")]
+    public static void AddAbilityButton()
+    {
+        Canvas canvas = FindRootCanvas();
+        if (canvas == null)
+        {
+            Debug.LogError("Open the Game scene first (needs a Canvas).");
+            return;
+        }
+
+        LoadAssets();
+        Undo.SetCurrentGroupName("Add Ability Button");
+        int undoGroup = Undo.GetCurrentGroup();
+
+        var safeArea = Object.FindFirstObjectByType<SafeArea>(FindObjectsInactive.Include);
+        CreateAbilityButton(safeArea != null ? safeArea.transform : canvas.transform);
+
+        Finish(canvas, undoGroup, "Ability button added.");
+    }
+
+    private static void CreateAbilityButton(Transform parent)
+    {
+        RemoveExisting(parent, "AbilityButton");
+
+        Sprite circle = GetCircleSprite();
+        var stats = Object.FindFirstObjectByType<Player_ExperienceAndStats>(FindObjectsInactive.Include);
+
+        // Default to the shockwave pickup if the stats have no ability set yet.
+        var shockwave = AssetDatabase.LoadAssetAtPath<Base_OneTimePickup_Data>("Assets/Resources/Pickups/Shockwave.asset");
+        if (stats != null)
+        {
+            var statsSo = new SerializedObject(stats);
+            SerializedProperty pickup = statsSo.FindProperty("abilityPickup");
+            if (pickup.objectReferenceValue == null && shockwave != null)
+            {
+                pickup.objectReferenceValue = shockwave;
+                statsSo.ApplyModifiedProperties();
+            }
+        }
+
+        RectTransform root = CreateRect("AbilityButton", parent);
+        root.anchorMin = root.anchorMax = Vector2.zero;
+        root.pivot = new Vector2(0.5f, 0.5f);
+        root.anchoredPosition = new Vector2(190f, 250f);
+        root.sizeDelta = new Vector2(200f, 200f);
+
+        Image glow = CreateImage("Glow", root, GetGlowSprite(), new Color(1f, 0.8f, 0.25f, 0f));
+        SetAnchoredCenter(glow.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(380f, 380f));
+
+        Image back = CreateImage("Back", root, circle, Panel);
+        Stretch(back.rectTransform, 0f, 0f, 0f, 0f);
+        back.raycastTarget = true;
+
+        Image fill = CreateImage("Fill", root, circle, new Color(0.45f, 0.75f, 1f, 1f));
+        fill.type = Image.Type.Filled;
+        fill.fillMethod = Image.FillMethod.Radial360;
+        fill.fillOrigin = (int)Image.Origin360.Top;
+        fill.fillClockwise = true;
+        fill.fillAmount = 0f;
+        Stretch(fill.rectTransform, 8f, 8f, 8f, 8f);
+
+        Image inner = CreateImage("Inner", root, circle, PanelLight);
+        Stretch(inner.rectTransform, 24f, 24f, 24f, 24f);
+
+        Sprite iconSprite = shockwave != null ? shockwave.pickupIcon : null;
+        Image icon = CreateImage("Icon", root, iconSprite, Color.white);
+        Stretch(icon.rectTransform, 48f, 48f, 48f, 48f);
+        icon.preserveAspect = true;
+
+        Button button = root.gameObject.AddComponent<Button>();
+        button.targetGraphic = back;
+        button.transition = Selectable.Transition.None;
+
+        var ability = root.gameObject.AddComponent<AbilityButton>();
+        var so = new SerializedObject(ability);
+        so.FindProperty("playerStats").objectReferenceValue = stats;
+        so.FindProperty("button").objectReferenceValue = button;
+        so.FindProperty("fill").objectReferenceValue = fill;
+        so.FindProperty("icon").objectReferenceValue = icon;
+        so.FindProperty("glow").objectReferenceValue = glow;
+        so.FindProperty("body").objectReferenceValue = root;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
     private static void CreateOnboardingTutorial(Transform parent)
     {
         RemoveExisting(parent, "OnboardingTutorial");

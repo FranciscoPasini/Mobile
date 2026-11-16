@@ -6,6 +6,8 @@ using NaughtyAttributes;
 public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
 {
     public event Action<Base_Enemy> Despawned;
+    /// <summary>Fired on any real death (player, turret or zone kill), not on pool cleanup.</summary>
+    public static event Action<Base_Enemy> Killed;
 
     [Header("References")]
     [SerializeField] private Transform target; // the town building to attack
@@ -226,7 +228,7 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
             }
         }
 
-        if (attackSound != null) AudioSource.PlayClipAtPoint(attackSound, transform.position);
+        if (attackSound != null) GameAudio.PlaySfx(attackSound, transform.position);
 
         if (enemyAnimation != null) enemyAnimation.PlayHit();
     }
@@ -315,6 +317,7 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
             playerStats.AddExperience(experienceReward);
         }
 
+        Killed?.Invoke(this);
         SimpleFx.DeathBurst(transform.position);
         Despawn();
     }

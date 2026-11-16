@@ -51,14 +51,26 @@ public class Player_ExperienceAndStats : MonoBehaviour
     [SerializeField] private StatScaling coinMultiplierScaling = new StatScaling(ScalingMethod.Linear, 0.15f, 0f);
     [SerializeField, NaughtyAttributes.ReadOnly] private float currentCoinMultiplier = 1f;
 
+    [NaughtyAttributes.HorizontalLine(3, NaughtyAttributes.EColor.White)]
+    [Header("Active Ability")]
+    [Tooltip("Pickup whose effect fires on the player when the ability is used. Any one-time pickup data works.")]
+    [SerializeField] private Base_OneTimePickup_Data abilityPickup;
+    [Tooltip("Enemy kills (by anything) needed to fully charge the ability.")]
+    [SerializeField, Min(1)] private int abilityKillsToCharge = 25;
+    [SerializeField] private int abilityCharge;
+
 
     public Action onPlayerLevelUp;
     public Action onPlayerStatsUpgraded;
     public Action onTownStatsUpgraded;
     /// <summary>Current experience, experience needed for the next level.</summary>
     public Action<int, int> onExperienceChanged;
+    /// <summary>Ability charge from 0 to 1.</summary>
+    public Action<float> onAbilityChargeChanged;
+    public Action onAbilityUsed;
 
     private int baseTownMaxHealth;
+    private Base_OneTimePickup abilityEffect;
 
 
     private void Awake()
@@ -80,6 +92,87 @@ public class Player_ExperienceAndStats : MonoBehaviour
             ApplyTownHealth();
         }
     }
+
+    private void OnEnable()
+    {
+        Base_Enemy.Killed += HandleEnemyKilled;
+    }
+
+    private void OnDisable()
+    {
+        Base_Enemy.Killed -= HandleEnemyKilled;
+    }
+
+
+    #region Active Ability
+
+    private void HandleEnemyKilled(Base_Enemy enemy) => AddAbilityCharge(1);
+
+    public void AddAbilityCharge(int kills)
+    {
+        if (kills <= 0 || IsAbilityReady()) return;
+
+        abilityCharge = Mathf.Min(abilityCharge + kills, abilityKillsToCharge);
+        onAbilityChargeChanged?.Invoke(GetAbilityCharge());
+    }
+
+    /// <summary>
+    /// Fires the ability pickup's effect on the player and empties the charge. False if not ready.
+    /// </summary>
+    public bool UseAbility()
+    {
+        if (!IsAbilityReady()) return false;
+
+        Base_OneTimePickup effect = GetAbilityEffect();
+        if (effect == null) return false;
+
+        // Emptied first so kills from the blast count toward the next charge.
+        abilityCharge = 0;
+        onAbilityChargeChanged?.Invoke(0f);
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null) effect.transform.position = player.transform.position;
+        effect.ApplyEffectNow();
+        onAbilityUsed?.Invoke();
+        return true;
+    }
+
+    /// <summary>
+    /// One hidden instance of the ability pickup, rebuilt if the data is swapped.
+    /// </summary>
+    private Base_OneTimePickup GetAbilityEffect()
+    {
+        if (abilityPickup == null || abilityPickup.pickupPrefab == null)
+        {
+            Debug.LogWarning($"{name}: no ability pickup (with a prefab) assigned.", this);
+            return null;
+        }
+
+        if (abilityEffect != null && abilityEffect.PickupData == abilityPickup) return abilityEffect;
+        if (abilityEffect != null) Destroy(abilityEffect.gameObject);
+
+        GameObject instance = Instantiate(abilityPickup.pickupPrefab, transform);
+        instance.name = "Ability Effect";
+        instance.SetActive(false);
+        abilityEffect = instance.GetComponentInChildren<Base_OneTimePickup>(true);
+        if (abilityEffect == null)
+        {
+            Debug.LogError($"{name}: '{abilityPickup.pickupPrefab.name}' has no Base_OneTimePickup.", this);
+            Destroy(instance);
+            return null;
+        }
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        abilityEffect.SetPlayer(player != null ? player.transform : null);
+        abilityEffect.SetTown(TownBuilding);
+        abilityEffect.SetPlayerStats(this);
+        abilityEffect.BindData(abilityPickup);
+        return abilityEffect;
+    }
+
+    [NaughtyAttributes.Button("Fill Ability Charge")]
+    private void DebugFillAbility() => AddAbilityCharge(abilityKillsToCharge);
+    #endregion
 
 
     #region Experience Functions
@@ -293,11 +386,13 @@ public class Player_ExperienceAndStats : MonoBehaviour
         experienceToNextLevel = experienceCurve.GetExperienceToNextLevel(currentPlayerLevel);
         RefreshExperienceMultiplier();
         RefreshCoinMultiplier();
+        abilityCharge = Mathf.Clamp(abilityCharge, 0, abilityKillsToCharge);
 
         if (!Application.isPlaying) return;
 
         ApplyTownHealth();
         onPlayerStatsUpgraded?.Invoke();
+        onAbilityChargeChanged?.Invoke(GetAbilityCharge());
     }
     #endregion
 
@@ -342,6 +437,18 @@ public class Player_ExperienceAndStats : MonoBehaviour
     public float GetCoinMultiplier()
     {
         return currentCoinMultiplier;
+    }
+    public float GetAbilityCharge()
+    {
+        return Mathf.Clamp01((float)abilityCharge / abilityKillsToCharge);
+    }
+    public bool IsAbilityReady()
+    {
+        return abilityCharge >= abilityKillsToCharge;
+    }
+    public Base_OneTimePickup_Data GetAbilityPickup()
+    {
+        return abilityPickup;
     }
     public int GetUpgradeLevel(UpgradeType upgrade)
     {

@@ -139,7 +139,7 @@ public class Building_Turret : Base_PurchaseableBuilding
         if (bulletData == null) return;
 
         bulletData.Spawn(firePoint.position, aimPoint, currentTarget.gameObject, bulletSpeed, bulletDamage);
-        if (fireSound != null) AudioSource.PlayClipAtPoint(fireSound, firePoint.position);
+        if (fireSound != null) GameAudio.PlaySfx(fireSound, firePoint.position);
         MuzzleFlashEmitter.PlayAt(firePoint.position, aimPoint - firePoint.position);
         recoil = 1f;
     }

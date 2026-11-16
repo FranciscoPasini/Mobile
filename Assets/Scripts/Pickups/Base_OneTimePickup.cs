@@ -177,6 +177,18 @@ public abstract class Base_OneTimePickup : MonoBehaviour, IPoolable
         flyTimer = 0f;
     }
 
+    /// <summary>
+    /// Runs the effect right away without being collected. Used by the player's active ability.
+    /// </summary>
+    public void ApplyEffectNow()
+    {
+        ApplyEffect();
+        if (pickupData != null && pickupData.pickupSound != null)
+        {
+            FlatAudio.Play(pickupData.pickupSound, 0.4f);
+        }
+    }
+
     private void ApplyDataSettings()
     {
         if (pickupData == null) return;
@@ -282,7 +294,7 @@ public abstract class Base_OneTimePickup : MonoBehaviour, IPoolable
         ApplyEffect();
         if (pickupData != null && pickupData.pickupSound != null)
         {
-            AudioSource.PlayClipAtPoint(pickupData.pickupSound, transform.position);
+            GameAudio.PlaySfx(pickupData.pickupSound, transform.position);
         }
         OnCollected?.Invoke(this);
         Despawn();

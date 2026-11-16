@@ -96,7 +96,7 @@ public class Bullet_Grenade : Base_Bullet
 
         if (explosionSound != null)
         {
-            AudioSource.PlayClipAtPoint(explosionSound, origin);
+            GameAudio.PlaySfx(explosionSound, origin);
         }
 
         GrenadeVfx.SpawnExplosion(origin, explosionRadius);
