@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "338452199448",
+    "project_id": "campsitedefense-67ff3",
+    "storage_bucket": "campsitedefense-67ff3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:338452199448:android:67a426844bf3aecb146b6d",
+        "android_client_info": {
+          "package_name": "com.DefaultCompany.CampsiteDefense"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7-rN0Uup_cskVCCKU8FLR906NROhsfa4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
