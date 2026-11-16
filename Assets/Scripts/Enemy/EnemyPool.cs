@@ -82,6 +82,7 @@ public class EnemyPool : MonoBehaviour
     private int totalCreated;
 
     public IReadOnlyList<Base_Enemy> ActiveEnemies => active;
+    public IReadOnlyList<Collider> SpawnAreas => spawnAreas;
     public int ActiveCount => active.Count;
     public int AvailableCount
     {

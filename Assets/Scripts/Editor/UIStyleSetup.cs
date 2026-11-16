@@ -449,6 +449,144 @@ public static class UIStyleSetup
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 
+    [MenuItem("Tools/Game/Add Onboarding Tutorial")]
+    public static void AddOnboardingTutorial()
+    {
+        Canvas canvas = FindRootCanvas();
+        if (canvas == null)
+        {
+            Debug.LogError("Open the Game scene first (needs a Canvas).");
+            return;
+        }
+
+        LoadAssets();
+        Undo.SetCurrentGroupName("Add Onboarding Tutorial");
+        int undoGroup = Undo.GetCurrentGroup();
+
+        var safeArea = Object.FindFirstObjectByType<SafeArea>(FindObjectsInactive.Include);
+        CreateOnboardingTutorial(safeArea != null ? safeArea.transform : canvas.transform);
+
+        Finish(canvas, undoGroup, "Onboarding tutorial added.");
+    }
+
+    private static void CreateOnboardingTutorial(Transform parent)
+    {
+        RemoveExisting(parent, "OnboardingTutorial");
+
+        Sprite circle = GetCircleSprite();
+        Sprite arrow = GetArrowSprite();
+        Sprite coin = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Coin.png");
+        Sprite mob = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Mob.png");
+
+        RectTransform root = CreateRect("OnboardingTutorial", parent);
+        Stretch(root, 0f, 0f, 0f, 0f);
+        root.SetAsLastSibling();
+        CanvasGroup group = root.gameObject.AddComponent<CanvasGroup>();
+        group.alpha = 0f;
+        group.interactable = false;
+        group.blocksRaycasts = false;
+
+        // World marker: the target mesh gets an outline, plus a bouncing arrow above and a label below.
+        RectTransform marker = CreateRect("Marker", root);
+        SetAnchoredCenter(marker, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(300f, 300f));
+
+        Image markerArrow = CreateImage("Arrow", marker, arrow, Danger);
+        SetAnchoredCenter(markerArrow.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 170f), new Vector2(110f, 110f));
+        Shadow arrowShadow = markerArrow.gameObject.AddComponent<Shadow>();
+        arrowShadow.effectColor = new Color(0f, 0f, 0f, 0.5f);
+        arrowShadow.effectDistance = new Vector2(0f, -6f);
+
+        TextMeshProUGUI markerLabel = CreateText("Label", marker, "YOUR CAMP", 46f, Danger, true);
+        SetAnchoredCenter(markerLabel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -190f), new Vector2(600f, 70f));
+        markerLabel.outlineWidth = 0.25f;
+        markerLabel.outlineColor = new Color32(0, 0, 0, 255);
+
+        // Edge arrow: copied per spawn area. First child is the head the script rotates.
+        RectTransform edge = CreateRect("EdgeArrow", root);
+        SetAnchoredCenter(edge, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(100f, 100f));
+        Image edgeHead = CreateImage("Head", edge, arrow, Danger);
+        SetAnchoredCenter(edgeHead.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(70f, 70f));
+        Image edgeBack = CreateImage("Back", edge, circle, new Color(0.08f, 0.09f, 0.13f, 0.9f));
+        Stretch(edgeBack.rectTransform, 0f, 0f, 0f, 0f);
+        Image edgeIcon = CreateImage("Icon", edge, mob, Danger);
+        edgeIcon.preserveAspect = true;
+        Stretch(edgeIcon.rectTransform, 22f, 22f, 22f, 22f);
+        edge.gameObject.SetActive(false);
+
+        // Instruction card under the top bar.
+        RectTransform card = CreateRect("Card", root);
+        card.anchorMin = card.anchorMax = new Vector2(0.5f, 1f);
+        card.pivot = new Vector2(0.5f, 0.5f);
+        card.anchoredPosition = new Vector2(0f, -440f);
+        card.sizeDelta = new Vector2(940f, 280f);
+        CanvasGroup cardGroup = card.gameObject.AddComponent<CanvasGroup>();
+
+        Image glow = CreateImage("Glow", card, GetGlowSprite(), new Color(Gold.r, Gold.g, Gold.b, 0.18f));
+        Stretch(glow.rectTransform, -120f, -120f, -100f, -100f);
+
+        RectTransform panel = CreateRect("Panel", card);
+        Stretch(panel, 0f, 0f, 0f, 0f);
+        StyleCard(panel.gameObject);
+
+        Image iconBack = CreateImage("IconBack", panel, circle, new Color(Danger.r, Danger.g, Danger.b, 0.25f));
+        PlaceLeft(iconBack.rectTransform, 40f, new Vector2(180f, 180f));
+        Image icon = CreateImage("Icon", iconBack.rectTransform, mob, Color.white);
+        icon.preserveAspect = true;
+        Stretch(icon.rectTransform, 30f, 30f, 30f, 30f);
+
+        TextMeshProUGUI title = CreateText("Title", panel, "DEFEND YOUR CAMP", 58f, Danger, true);
+        title.alignment = TextAlignmentOptions.Left;
+        Stretch(title.rectTransform, 250f, 40f, 160f, 40f);
+
+        TextMeshProUGUI body = CreateText("Body", panel, "Enemies are coming for it.", 36f, SoftWhite, false);
+        body.alignment = TextAlignmentOptions.TopLeft;
+        body.textWrappingMode = TextWrappingModes.Normal;
+        body.lineSpacing = -10f;
+        Stretch(body.rectTransform, 250f, 40f, 40f, 125f);
+
+        RectTransform timerTrack = CreateImage("TimerTrack", panel, white, new Color(1f, 1f, 1f, 0.1f)).rectTransform;
+        timerTrack.anchorMin = new Vector2(0f, 0f);
+        timerTrack.anchorMax = new Vector2(1f, 0f);
+        timerTrack.pivot = new Vector2(0.5f, 0f);
+        timerTrack.offsetMin = new Vector2(40f, 18f);
+        timerTrack.offsetMax = new Vector2(-40f, 28f);
+        Image timerFill = CreateFill("Fill", timerTrack, Danger);
+        Stretch(timerFill.rectTransform, 0f, 0f, 0f, 0f);
+
+        var dots = new Image[3];
+        for (int i = 0; i < dots.Length; i++)
+        {
+            dots[i] = CreateImage($"Dot{i + 1}", panel, circle, Color.white);
+            RectTransform dot = dots[i].rectTransform;
+            dot.anchorMin = dot.anchorMax = dot.pivot = new Vector2(1f, 1f);
+            dot.anchoredPosition = new Vector2(-40f - (dots.Length - 1 - i) * 36f, -30f);
+            dot.sizeDelta = new Vector2(22f, 22f);
+        }
+
+        var tutorial = root.gameObject.AddComponent<OnboardingTutorial>();
+        var so = new SerializedObject(tutorial);
+        so.FindProperty("defendIcon").objectReferenceValue = mob;
+        so.FindProperty("buildIcon").objectReferenceValue = coin;
+        so.FindProperty("upgradeIcon").objectReferenceValue = arrow;
+        so.FindProperty("group").objectReferenceValue = group;
+        so.FindProperty("card").objectReferenceValue = card;
+        so.FindProperty("cardGroup").objectReferenceValue = cardGroup;
+        so.FindProperty("titleText").objectReferenceValue = title;
+        so.FindProperty("bodyText").objectReferenceValue = body;
+        so.FindProperty("icon").objectReferenceValue = icon;
+        so.FindProperty("iconBack").objectReferenceValue = iconBack;
+        so.FindProperty("timerFill").objectReferenceValue = timerFill;
+        SerializedProperty dotsProp = so.FindProperty("stepDots");
+        dotsProp.arraySize = dots.Length;
+        for (int i = 0; i < dots.Length; i++) dotsProp.GetArrayElementAtIndex(i).objectReferenceValue = dots[i];
+        so.FindProperty("outlineMaterial").objectReferenceValue = GetOutlineMaterial();
+        so.FindProperty("marker").objectReferenceValue = marker;
+        so.FindProperty("markerArrow").objectReferenceValue = markerArrow.rectTransform;
+        so.FindProperty("markerLabel").objectReferenceValue = markerLabel;
+        so.FindProperty("edgeArrowTemplate").objectReferenceValue = edge;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
     private static void StylePauseButton(Transform canvas)
     {
         Transform pause = FindChild(canvas, "PauseButton");
@@ -685,6 +823,55 @@ public static class UIStyleSetup
         });
     }
 
+    private static Material GetOutlineMaterial()
+    {
+        const string path = "Assets/Materials/Outline.mat";
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material != null) return material;
+
+        Shader shader = Shader.Find("Custom/Outline");
+        if (shader == null)
+        {
+            Debug.LogError("Custom/Outline shader not found, the tutorial won't outline meshes.");
+            return null;
+        }
+
+        material = new Material(shader);
+        AssetDatabase.CreateAsset(material, path);
+        return material;
+    }
+
+    private static Sprite GetCircleSprite()
+    {
+        return GetGeneratedSprite("Circle", 128, 128, (u, v) =>
+        {
+            float d = Vector2.Distance(new Vector2(u, v), new Vector2(0.5f, 0.5f)) * 2f;
+            return new Color(1f, 1f, 1f, Mathf.Clamp01((1f - d) * 64f));
+        });
+    }
+
+    private static Sprite GetArrowSprite()
+    {
+        // Points up. 4x4 samples per pixel for smooth diagonal edges.
+        const int size = 128;
+        return GetGeneratedSprite("Arrow", size, size, (u, v) =>
+        {
+            float covered = 0f;
+            for (int sy = 0; sy < 4; sy++)
+            {
+                for (int sx = 0; sx < 4; sx++)
+                {
+                    float x = u + (sx - 1.5f) / (4f * size);
+                    float y = v + (sy - 1.5f) / (4f * size);
+                    bool head = y > 0.45f && y < 0.95f && Mathf.Abs(x - 0.5f) < (0.95f - y) * 0.9f;
+                    bool shaft = y > 0.06f && y <= 0.46f && Mathf.Abs(x - 0.5f) < 0.14f;
+                    if (head || shaft) covered += 1f / 16f;
+                }
+            }
+            return new Color(1f, 1f, 1f, covered);
+        });
+    }
+
     private static Sprite GetGeneratedSprite(string name, int width, int height, System.Func<float, float, Color> pixel)
     {
         string path = $"{GeneratedFolder}/{name}.png";
@@ -705,11 +892,20 @@ public static class UIStyleSetup
             AssetDatabase.ImportAsset(path);
             var importer = (TextureImporter)AssetImporter.GetAtPath(path);
             importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
             importer.alphaIsTransparency = true;
             importer.mipmapEnabled = false;
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.SaveAndReimport();
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+        }
+
+        // Unity can default new textures to Multiple mode with no slices, which loads no sprite.
+        var existing = (TextureImporter)AssetImporter.GetAtPath(path);
+        if (existing != null && existing.spriteImportMode != SpriteImportMode.Single)
+        {
+            existing.spriteImportMode = SpriteImportMode.Single;
+            existing.SaveAndReimport();
         }
 
         Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);

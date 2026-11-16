@@ -20,7 +20,7 @@ public class Building_Turret : Base_PurchaseableBuilding
 
     [Header("Pathing")]
     [Tooltip("Optional. Enabled on purchase so enemies path around the turret.")]
-    [SerializeField] private NavMeshObstacle navMeshObstacle;
+    [SerializeField] private NavMeshObstacle navMeshObstacle;   
 
     private int bulletDamage;
     private float bulletSpeed;
