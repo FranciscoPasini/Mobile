@@ -11,6 +11,8 @@ public class Building_Turret : Base_PurchaseableBuilding
     [SerializeField] private Transform firePoint;
     [Tooltip("Optional part that rotates to face the target.")]
     [SerializeField] private Transform turretHead;
+    [Tooltip("Degrees to add if the barrel doesn't point along the turret's forward in the model.")]
+    [SerializeField] private float headYawOffset = 0f;
     [SerializeField] private float turnSpeed = 360f;
     [SerializeField] private LayerMask enemyLayer;
     [SerializeField] private float targetScanInterval = 0.2f;
@@ -30,12 +32,23 @@ public class Building_Turret : Base_PurchaseableBuilding
     private Collider currentTarget;
     private readonly Collider[] scanResults = new Collider[32];
     private Vector3 headRestLocalPos;
+    private Quaternion headRestOffset = Quaternion.identity;
+    private Vector3 aimDirection;
     private float recoil;
 
     protected override void Awake()
     {
         if (firePoint == null) firePoint = transform;
-        if (turretHead != null) headRestLocalPos = turretHead.localPosition;
+        if (turretHead != null)
+        {
+            headRestLocalPos = turretHead.localPosition;
+
+            // Keeps the model's import tilt so only yaw changes when aiming.
+            Vector3 restForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+            Quaternion restYaw = Quaternion.LookRotation(restForward, Vector3.up);
+            headRestOffset = Quaternion.Inverse(restYaw) * turretHead.rotation;
+            aimDirection = restForward;
+        }
 
         if (turretData == null)
         {
@@ -175,9 +188,12 @@ public class Building_Turret : Base_PurchaseableBuilding
         direction.y = 0f;
         if (direction.sqrMagnitude < 0.0001f) return;
 
+        aimDirection = direction.normalized;
+        Quaternion yaw = Quaternion.LookRotation(aimDirection, Vector3.up) * Quaternion.Euler(0f, headYawOffset, 0f);
+
         turretHead.rotation = Quaternion.RotateTowards(
             turretHead.rotation,
-            Quaternion.LookRotation(direction),
+            yaw * headRestOffset,
             turnSpeed * Time.deltaTime);
     }
 
@@ -186,7 +202,10 @@ public class Building_Turret : Base_PurchaseableBuilding
         if (turretHead == null) return;
 
         recoil = Mathf.MoveTowards(recoil, 0f, Time.deltaTime * 8f);
-        turretHead.localPosition = headRestLocalPos - Vector3.forward * (recoil * 0.12f);
+        Vector3 kick = turretHead.parent != null
+            ? turretHead.parent.InverseTransformDirection(-aimDirection)
+            : -aimDirection;
+        turretHead.localPosition = headRestLocalPos + kick * (recoil * 0.12f);
     }
 
     #endregion

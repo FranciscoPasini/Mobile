@@ -57,6 +57,7 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
     private static readonly int ColorId = Shader.PropertyToID("_Color");
     private MaterialPropertyBlock hitBlock;
     private Renderer[] renderers;
+    private EnemyAnimation enemyAnimation;
     private Color[] originalColors;
     private float hitFlashTimer;
 
@@ -133,6 +134,7 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
 
         hitBlock = new MaterialPropertyBlock();
         CacheRenderers();
+        enemyAnimation = GetComponent<EnemyAnimation>();
 
         if (target == null)
         {
@@ -225,6 +227,8 @@ public class Base_Enemy : MonoBehaviour, IPoolable, IDamageable
         }
 
         if (attackSound != null) AudioSource.PlayClipAtPoint(attackSound, transform.position);
+
+        if (enemyAnimation != null) enemyAnimation.PlayHit();
     }
 
     public void Spawn(Vector3 position)

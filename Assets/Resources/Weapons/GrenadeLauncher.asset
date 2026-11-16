@@ -14,15 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Base_Weapon_Data
   weaponClass:
     rid: 293540259533160704
-  weaponName: Grenade Launcher
+  weaponName: Launcher
   weaponDescription: Lobs explosives that blast and shove nearby enemies.
   weaponIcon: {fileID: 0}
+  pickupModel: {fileID: 2127438579256016053, guid: 77fa6f2f0b7ff504cb93301a1bb30241, type: 3}
   weaponBaseDamage: 6
   weaponBaseRange: 12
   weaponBaseFireRate: 1.2
   weaponBaseBulletSpeed: 14
   weaponBaseAmmo: 6
   weaponFireSound: {fileID: 8300000, guid: cf89216ba967d224ca4c056512e95e69, type: 3}
+  pickupSound: {fileID: 8300000, guid: ecd15c80b8afffa4eabdd78b6815a445, type: 3}
   bulletData: {fileID: 11400000, guid: 9e1b4c7d2a305f68b9c0d1e2f3a4b5c6, type: 2}
   scaling:
     damage:

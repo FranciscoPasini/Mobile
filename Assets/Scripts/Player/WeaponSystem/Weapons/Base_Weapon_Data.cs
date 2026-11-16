@@ -12,6 +12,8 @@ public class Base_Weapon_Data : ScriptableObject
     public string weaponName;
     public string weaponDescription;
     public Sprite weaponIcon;
+    [Tooltip("Model shown on the ground pickup. Visual only; colliders on it are removed.")]
+    public GameObject pickupModel;
     public float weaponBaseDamage;
     public float weaponBaseRange;
     public float weaponBaseFireRate;

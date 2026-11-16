@@ -17,12 +17,14 @@ MonoBehaviour:
   weaponName: Railgun
   weaponDescription: A piercing laser that cuts through a line of enemies.
   weaponIcon: {fileID: 0}
+  pickupModel: {fileID: 2127438579256016053, guid: c8855df0bd6bf9145acb4924c9fe8eb1, type: 3}
   weaponBaseDamage: 8
   weaponBaseRange: 18
   weaponBaseFireRate: 1.4
   weaponBaseBulletSpeed: 80
   weaponBaseAmmo: 5
   weaponFireSound: {fileID: 8300000, guid: 86a245863a081504ea165deb79bb27bd, type: 3}
+  pickupSound: {fileID: 8300000, guid: ecd15c80b8afffa4eabdd78b6815a445, type: 3}
   bulletData: {fileID: 11400000, guid: 3d8f2a1c6b5e4d709a8c1e2f3b4d5c60, type: 2}
   scaling:
     damage:

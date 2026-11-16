@@ -15,6 +15,9 @@ public class Player_ExperienceAndStats : MonoBehaviour
     [SerializeField, NaughtyAttributes.ReadOnly] private int experienceToNextLevel;
     [SerializeField] private int currentPlayerExperience;
     [SerializeField] private ExperienceCurve experienceCurve = new ExperienceCurve();
+    [Tooltip("Played when the player levels up. Leave empty for no sound.")]
+    [SerializeField] private AudioClip levelUpSound;
+    [SerializeField, Range(0f, 1f)] private float levelUpVolume = 1f;
 
     [NaughtyAttributes.HorizontalLine(3, NaughtyAttributes.EColor.White)]
     [Header("Town Stats")]
@@ -89,12 +92,19 @@ public class Player_ExperienceAndStats : MonoBehaviour
         currentPlayerExperience += granted;
 
         // One big reward can be worth several levels, leftover carries into the next one.
+        bool leveledUp = false;
         while (currentPlayerExperience >= experienceToNextLevel)
         {
             currentPlayerExperience -= experienceToNextLevel;
             currentPlayerLevel++;
             experienceToNextLevel = experienceCurve.GetExperienceToNextLevel(currentPlayerLevel);
+            leveledUp = true;
             onPlayerLevelUp?.Invoke();
+        }
+
+        if (leveledUp)
+        {
+            FlatAudio.Play(levelUpSound, levelUpVolume);
         }
 
         onExperienceChanged?.Invoke(currentPlayerExperience, experienceToNextLevel);

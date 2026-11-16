@@ -22,6 +22,9 @@ public class PlayerController : MonoBehaviour
 
     private Vector2 joystickInput;
     protected float currentPlayerSpeed;
+    private float moveAmount;
+
+    public float MoveAmount => moveAmount;
 
     protected virtual void Awake()
     {
@@ -147,6 +150,7 @@ public class PlayerController : MonoBehaviour
         Player.transform.position +=
             movement * currentPlayerSpeed * Time.deltaTime;
 
+        moveAmount = input.magnitude;
         RotatePlayer(movement);
     }
 

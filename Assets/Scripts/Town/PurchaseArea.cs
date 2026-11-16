@@ -25,6 +25,13 @@ public class PurchaseArea : MonoBehaviour
     [Range(0.1f, 1f)]
     [SerializeField] private float scaleAfterPurchase = 0.7f;
 
+    [Header("Sounds")]
+    [Tooltip("Played on the first buy. Leave empty for no sound.")]
+    [SerializeField] private AudioClip purchaseSound;
+    [Tooltip("Played on every upgrade after the first buy. Uses the purchase sound if empty.")]
+    [SerializeField] private AudioClip upgradeSound;
+    [SerializeField, Range(0f, 1f)] private float soundVolume = 1f;
+
     [Header("Unlock Other Areas")]
     [Tooltip("These zones stay off until this building is bought, then they turn on. Use this for a door after a wall, a second turret after the first, and so on.")]
     [SerializeField] private List<PurchaseArea> areasToUnlockOnPurchase = new List<PurchaseArea>();
@@ -242,7 +249,13 @@ public class PurchaseArea : MonoBehaviour
         ActivateUnlockAreas();
         ApplyPurchaseScale();
         SimpleFx.BuyBurst(transform.position);
+        PlaySound(purchaseSound);
         OnPurchased?.Invoke();
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        FlatAudio.Play(clip, soundVolume);
     }
 
     private void CaptureUnpurchasedScale()
@@ -279,6 +292,7 @@ public class PurchaseArea : MonoBehaviour
     {
         ResetAfterPurchase();
         SimpleFx.BuyBurst(transform.position);
+        PlaySound(upgradeSound != null ? upgradeSound : purchaseSound);
         OnUpgraded?.Invoke(newLevel);
     }
 
@@ -369,5 +383,29 @@ public class PurchaseArea : MonoBehaviour
         }
 
         Debug.Log($"{name} -> {purchasable.name}: level {purchasable.Level}, next {purchasable.NextCost}, max {purchasable.IsMaxLevel}", this);
+    }
+}
+
+/// <summary>
+/// Flat one-shots. PlayClipAtPoint is 3D, and a clip played on the listener drops out.
+/// </summary>
+public static class FlatAudio
+{
+    private static AudioSource source;
+
+    public static void Play(AudioClip clip, float volume)
+    {
+        if (clip == null) return;
+
+        if (source == null)
+        {
+            var go = new GameObject("FlatAudio");
+            Object.DontDestroyOnLoad(go);
+            source = go.AddComponent<AudioSource>();
+            source.spatialBlend = 0f;
+            source.playOnAwake = false;
+        }
+
+        source.PlayOneShot(clip, volume);
     }
 }

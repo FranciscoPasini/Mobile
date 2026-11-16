@@ -17,12 +17,14 @@ MonoBehaviour:
   weaponName: Shotgun
   weaponDescription: Fires a spread of pellets that stagger enemies.
   weaponIcon: {fileID: 0}
+  pickupModel: {fileID: 2127438579256016053, guid: 489cb67039e98844ebc45c9b7f9d85ae, type: 3}
   weaponBaseDamage: 1.2
   weaponBaseRange: 7
   weaponBaseFireRate: 0.9
   weaponBaseBulletSpeed: 22
   weaponBaseAmmo: 8
   weaponFireSound: {fileID: 8300000, guid: b241c02d8aa02794b9cc471a8626ed89, type: 3}
+  pickupSound: {fileID: 8300000, guid: ecd15c80b8afffa4eabdd78b6815a445, type: 3}
   bulletData: {fileID: 11400000, guid: 7c4e91a2b8d64f1e9c3a5b7d0e2f4a61, type: 2}
   scaling:
     damage:

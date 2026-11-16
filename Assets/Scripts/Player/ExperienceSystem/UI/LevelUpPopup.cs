@@ -49,6 +49,7 @@ public class LevelUpPopup : MonoBehaviour
     private bool isShowing;
     private bool pausedByPopup;
     private float timeScaleBeforePause = 1f;
+    private Rect lastSafeArea;
 
     public bool IsShowing => isShowing;
 
@@ -129,8 +130,57 @@ public class LevelUpPopup : MonoBehaviour
 
         isShowing = true;
         if (popupRoot != null) popupRoot.SetActive(true);
+        CoverFullScreen();
         RefreshHealButton();
         Pause();
+    }
+
+    private void LateUpdate()
+    {
+        if (!isShowing || Screen.safeArea == lastSafeArea) return;
+        CoverFullScreen();
+    }
+
+    /// <summary>
+    /// The popup lives under the safe area, so its panel stops short of the notch.
+    /// The dimmer is drawn larger than that panel and covers the whole screen.
+    /// </summary>
+    private void CoverFullScreen()
+    {
+        if (popupRoot == null) return;
+
+        lastSafeArea = Screen.safeArea;
+        RectTransform panel = popupRoot.transform as RectTransform;
+        RectTransform dimmer = panel.Find("Dimmer") as RectTransform;
+        if (dimmer == null)
+        {
+            var go = new GameObject("Dimmer", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            go.layer = popupRoot.layer;
+            go.transform.SetParent(panel, false);
+            dimmer = go.GetComponent<RectTransform>();
+            dimmer.anchorMin = Vector2.zero;
+            dimmer.anchorMax = Vector2.one;
+            dimmer.pivot = new Vector2(0.5f, 0.5f);
+
+            Image dimmerImage = go.GetComponent<Image>();
+            Image panelImage = popupRoot.GetComponent<Image>();
+            dimmerImage.color = panelImage != null ? panelImage.color : new Color(0f, 0f, 0f, 0.75f);
+            dimmerImage.raycastTarget = true;
+            if (panelImage != null) panelImage.color = new Color(0f, 0f, 0f, 0f);
+        }
+
+        dimmer.SetAsFirstSibling();
+
+        RectTransform safe = transform.parent as RectTransform;
+        if (safe == null) return;
+
+        float spanX = Mathf.Max(0.0001f, safe.anchorMax.x - safe.anchorMin.x);
+        float spanY = Mathf.Max(0.0001f, safe.anchorMax.y - safe.anchorMin.y);
+        float width = panel.rect.width;
+        float height = panel.rect.height;
+
+        dimmer.offsetMin = new Vector2(-width * safe.anchorMin.x / spanX, -height * safe.anchorMin.y / spanY);
+        dimmer.offsetMax = new Vector2(width * (1f - safe.anchorMax.x) / spanX, height * (1f - safe.anchorMax.y) / spanY);
     }
 
     /// <summary>

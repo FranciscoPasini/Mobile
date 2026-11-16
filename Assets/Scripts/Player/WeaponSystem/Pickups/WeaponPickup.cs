@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -31,6 +32,8 @@ public class WeaponPickup : MonoBehaviour, IPoolable
     [Header("Visuals")]
     [SerializeField] private Renderer pickupRenderer;
     [SerializeField] private SpriteRenderer iconRenderer;
+    [Tooltip("Optional parent for the weapon model. Uses the pickup root if empty.")]
+    [SerializeField] private Transform modelSlot;
     [SerializeField] private float spinSpeed = 50f;
     [SerializeField] private float hoverHeight = 0.18f;
     [SerializeField] private float hoverSpeed = 2.2f;
@@ -54,6 +57,9 @@ public class WeaponPickup : MonoBehaviour, IPoolable
     private Light glow;
     private Vector3 restPosition;
     private float hoverTime;
+    private readonly Dictionary<Base_Weapon_Data, GameObject> models = new Dictionary<Base_Weapon_Data, GameObject>();
+    private GameObject activeModel;
+    private Renderer[] modelRenderers = System.Array.Empty<Renderer>();
 
     public bool IsCollecting => state == State.Collecting;
 
@@ -93,6 +99,30 @@ public class WeaponPickup : MonoBehaviour, IPoolable
             iconRenderer.sprite = data != null ? data.weaponIcon : null;
             iconRenderer.enabled = iconRenderer.sprite != null;
         }
+
+        ShowModel(data);
+        SetVisible(true);
+    }
+
+    private void ShowModel(Base_Weapon_Data data)
+    {
+        if (activeModel != null) activeModel.SetActive(false);
+        activeModel = null;
+        modelRenderers = System.Array.Empty<Renderer>();
+
+        if (data == null || data.pickupModel == null) return;
+
+        if (!models.TryGetValue(data, out activeModel) || activeModel == null)
+        {
+            Transform parent = modelSlot != null ? modelSlot : transform;
+            activeModel = Instantiate(data.pickupModel, parent, false);
+            foreach (Collider c in activeModel.GetComponentsInChildren<Collider>(true)) Destroy(c);
+            foreach (Rigidbody rb in activeModel.GetComponentsInChildren<Rigidbody>(true)) Destroy(rb);
+            models[data] = activeModel;
+        }
+
+        activeModel.SetActive(true);
+        modelRenderers = activeModel.GetComponentsInChildren<Renderer>(true);
     }
 
     public void SetPickupRangeMultiplier(float multiplier)
@@ -277,7 +307,12 @@ public class WeaponPickup : MonoBehaviour, IPoolable
 
     private void SetVisible(bool visible)
     {
-        if (pickupRenderer != null && pickupRenderer.enabled != visible) pickupRenderer.enabled = visible;
+        bool showPlaceholder = visible && activeModel == null;
+        if (pickupRenderer != null && pickupRenderer.enabled != showPlaceholder) pickupRenderer.enabled = showPlaceholder;
+        for (int i = 0; i < modelRenderers.Length; i++)
+        {
+            if (modelRenderers[i] != null && modelRenderers[i].enabled != visible) modelRenderers[i].enabled = visible;
+        }
         if (iconRenderer != null && iconRenderer.sprite != null && iconRenderer.enabled != visible) iconRenderer.enabled = visible;
         PickupVisual.SetGlowVisible(glow, visible);
     }

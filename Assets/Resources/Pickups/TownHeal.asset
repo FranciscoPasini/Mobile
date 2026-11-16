@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: TownHeal
   m_EditorClassIdentifier: Assembly-CSharp::OneTimePickup_TownHeal_Data
   pickupPrefab: {fileID: 3847293650182736401, guid: a2be7058d4190f2e5f60718293a4b5c6, type: 3}
-  pickupName: Town Heal
+  pickupName: Heal Site
   pickupIcon: {fileID: 0}
+  pickupSound: {fileID: 8300000, guid: 4d002ffffb7bffb44b33cf97ea8de6cd, type: 3}
   lifetime: 30
   blinkWarningTime: 5
   blinkRateStart: 2

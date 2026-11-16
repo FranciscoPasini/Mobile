@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Experience
   m_EditorClassIdentifier: Assembly-CSharp::OneTimePickup_Experience_Data
   pickupPrefab: {fileID: 3847293650182736401, guid: e37ab492185d4362bac314b0a1c2d4e5, type: 3}
-  pickupName: Experience Burst
+  pickupName: EXP Burst
   pickupIcon: {fileID: 0}
+  pickupSound: {fileID: 0}
   lifetime: 30
   blinkWarningTime: 5
   blinkRateStart: 2

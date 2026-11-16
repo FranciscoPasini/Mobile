@@ -359,6 +359,9 @@ MonoBehaviour:
   paymentDuration: 2
   minCoinsPerSecond: 5
   requireReentryAfterPurchase: 1
+  purchaseSound: {fileID: 8300000, guid: 6a82e4ab9e4e06741be6e22e1bd782c2, type: 3}
+  upgradeSound: {fileID: 8300000, guid: 6a82e4ab9e4e06741be6e22e1bd782c2, type: 3}
+  soundVolume: 1
   areasToUnlockOnPurchase: []
   hideUnlockAreasUntilPurchased: 1
 --- !u!23 &7200044
